@@ -22,6 +22,27 @@ A fully worked finite example is in
 
 ---
 
+### Foundational viewpoint: reference systems instead of absolute foundations
+
+LogicDissoc starts from a simple but important stance: there is no global, all-encompassing “final” theory in which everything is decided once and for all. In practice—both in mathematics and in logic—we always reason **relative to a reference system**:
+
+- a background theory (PA, ZFC, a type theory, …),
+- a class of admissible models for that theory,
+- and a notion of truth internal to that system.
+
+In this library, such a reference system is represented abstractly by a semantic framework  
+`(Sentence, Model, Sat, Γ_ref)`. The theory `Γ_ref` is not “the whole of mathematics”; it is a **local reference frame**. Finite batches `S` of sentences are extensions of this frame, and the central object of LogicDissoc is to analyse, *semantically*, what happens when we move from `Γ_ref` to `Γ_ref ∪ S`.
+
+From this point of view, **incompleteness is not a defect** to be removed, but a **condition**: as soon as an extension `S` really changes the reference system, it will be non-conservative. The role of the obstruction index `A*_Godel` is not to “fix” incompleteness, but to **measure** the semantic obstruction to conservative extension:
+
+- `A*_Godel(S) = 0` means that `S` leaves the reference system unchanged (no loss of models, no obstruction);
+- `A*_Godel(S) > 0` means that `S` genuinely deforms the reference system (some reference models are lost along specific Gödel directions).
+
+The library thus treats incompleteness as the **normal situation** when extending a reference system, and provides a general, fully formalized way of quantifying this obstruction rather than merely stating its existence.
+
+
+---
+
 ## 1. Basic semantic framework
 
 **Definition 1 (Semantic framework).**  
