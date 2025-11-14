@@ -1,4 +1,6 @@
 import LogicDissoc.BasicSemantics
+import LogicDissoc.Rank
+import LogicDissoc.DeltaConstruction
 import LogicDissoc.Rev
 import LogicDissoc.CanonicalMeasure
 import LogicDissoc.RefSystem
@@ -13,3 +15,4 @@ import LogicDissoc.Godel
 import LogicDissoc.GlobalRigidity
 import LogicDissoc.LocalRigidity
 import LogicDissoc.GraphToy
+import LogicDissoc.Rank

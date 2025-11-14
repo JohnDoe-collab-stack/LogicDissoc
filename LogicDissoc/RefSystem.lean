@@ -6,15 +6,21 @@ namespace LogicDissoc
 
 universe u v
 
+
 /--
 Reference system in the SLE sense:
 
 * `Model`    : type of models,
 * `Sentence` : type of formulas,
 * `Sat`      : satisfaction relation,
-* `delta`    : real-valued “Δ_ref”,
+* `delta`    : real-valued "Δ_ref",
 
 with axioms (DR0), (DR1) and semantic invariance.
+
+NOTE: This is an axiomatic structure. For a concrete construction
+in the finite/decidable case, see DeltaConstruction.lean which
+shows that RefSystem can be explicitly built from BasicSemantics
+by counting model proportions.
 -/
 structure RefSystem (Model : Type u) (Sentence : Type v) where
   Sat   : Model → Sentence → Prop
