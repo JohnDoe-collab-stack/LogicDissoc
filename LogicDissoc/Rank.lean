@@ -257,6 +257,108 @@ def codeHasTranscendentBits
 
 end NumericCodes
 
+
+/-!
+### Halting, reverse halting (`Rev`) et rang obstructionnel
+
+Ce fichier se situe au-dessus de deux briques plus élémentaires :
+
+* `RefSystem` : un système de référence sémantique avec
+  `delta : Sentence → ℝ` et le rang fini `ObstructionRank`
+  (local / ilm / transcend).
+* `Rev` (`LogicDissoc/Rev.lean`) : une théorie abstraite des traces
+  temporelles et de la "révision de queue" (`Rev`) qui caractérise
+  le halting.
+
+Dans `Rev.lean`, pour une trace `T : Trace := ℕ → Prop`, on a deux
+points de vue sur le même phénomène :
+
+* halting direct :
+  `Halts T :≡ ∃ n, T n`  (il existe un temps où `T` vaut) ;
+
+* reverse halting :
+  `Rev Q T :≡ Q.pi (up T)` pour un `QueueProjector Q`.
+
+Le lemme `Rev_iff_Halts` (via `Rev_iff_exists`) formalise :
+
+  `Rev Q T ↔ Halts T`
+
+pour tout `Q`. Autrement dit, toute révision de queue satisfaisant les
+axiomes de `QueueProjector` coïncide extensionnellement avec le
+prédicat de halting direct `∃ n, T n`.
+
+Pour une lecture locale
+
+  `LR : Context → Sentence' → Trace`
+
+(on garde ici un type `Sentence'` abstrait, potentiellement différent
+du `Sentence` de `RefSystem`), on définit :
+
+* `Prov LR Γ φ :≡ ∃ n, LR Γ φ n`
+  (point de vue dynamique : il y a un temps où la procédure de preuve
+   voit `φ` à partir de `Γ`) ;
+
+* `verdict LR Γ φ :≡ Rev0 (LR Γ φ)`
+  (point de vue stabilisé : la révision de la trace conclut "oui").
+
+Le lemme `verdict_iff_HaltsLR` (via `verdict_iff_Prov`) formalise :
+
+  `verdict LR Γ φ ↔ HaltsLR LR Γ φ`
+
+où `HaltsLR LR Γ φ` n’est rien d’autre que `Prov LR Γ φ`. Le "verdict"
+est donc exactement le halting de la procédure, vu à travers l’opérateur
+de révision.
+
+Ce fichier `Rank` s’occupe d’une autre couche : il classe des phrases
+`Sentence` via `delta` et `ObstructionRank`, et en particulier il
+spécifie un code
+
+  `Omega : Code`
+
+dont :
+
+* toutes les coupes rationnelles `Cut q Omega` ont rang `ObstructionRank.ilm` ;
+* tous les bits dyadiques `Bit n a Omega` ont rang
+  `ObstructionRank.transcend`.
+
+Actuellement, cela repose sur deux axiomes :
+
+* `omega_cuts_are_ilm` ;
+* `omega_bits_are_transcend`,
+
+qui imposent directement les valeurs de `delta` pour `Cut q Omega` et
+`Bit n a Omega`.
+
+L’objectif à terme est de **remplacer ces axiomes** par une construction
+d’`Omega` via le halting (au sens de `Rev` / `Halts`), en procédant
+schématiquement ainsi :
+
+1. Modéliser une machine universelle (ou un système de preuve) par une
+   `LocalReading LR` sur un type de contextes et de phrases qui expriment
+   des faits de halting ("ce programme halt", "ce bit est 1", etc.).
+
+2. Construire des familles de phrases
+   `Cut : ℚ → Code → Sentence` et
+   `Bit : ℕ → ℕ → Code → Sentence`
+   en termes de verdicts de halting (phrases du type "verdict LR Γ φ").
+
+3. Définir un code `Omega : Code` représentant la probabilité d’arrêt
+   ainsi obtenue (Ω au sens de Chaitin), puis **démontrer** que, pour
+   ce `Omega`, les phrases `Cut q Omega` et `Bit n a Omega` ont bien les
+   propriétés sur `delta` postulées ici sous forme d’axiomes.
+
+Ce fichier fournit déjà toute la couche `delta` / `ObstructionRank` /
+`cutRank` / `bitRank` et la spécification abstraite `OmegaSpecification`.
+Le fichier `Rev.lean` fournit la couche "halting ↔ reverse halting".
+Ce sont les briques nécessaires pour, dans un fichier ultérieur
+(`OmegaViaHalting.lean` par exemple), éliminer progressivement les
+axiomes de type Chaitin en les remplaçant par des définitions et des
+théorèmes.
+-/
+
+
+
+
 section OmegaSpecification
 
 variable {Model : Type u} {Sentence : Type v}
@@ -265,6 +367,15 @@ variable (Cut : ℚ → Code → Sentence)
 variable (Bit : ℕ → ℕ → Code → Sentence)
 
 variable (Omega : Code)
+
+
+/-!
+TODO (Chaitin-axioms placeholder):
+
+These two axioms describe Ω obstructionally (via `delta`) and are
+intended to be replaced, in a later stage, by theorems proved from
+a concrete halting-based construction of `Omega` using `Rev.lean`.
+-/
 
 axiom omega_cuts_are_ilm :
   ∀ q : ℚ,

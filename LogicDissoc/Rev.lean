@@ -152,3 +152,80 @@ lemma verdictQ_iff_Prov
   simpa using (Rev_iff_exists Q (LR Γ φ))
 
 end LogicDissoc
+
+
+/-! ### Direct halting and its relation to `Rev` -/
+
+namespace LogicDissoc
+
+/-- Direct halting predicate on traces: `Halts T` iff `T` holds at some time. -/
+def Halts (T : Trace) : Prop := ∃ n : ℕ, T n
+
+lemma Halts_iff_exists (T : Trace) :
+  Halts T ↔ ∃ n, T n := Iff.rfl
+
+/-- For any queue projector `Q`, `Rev Q` coincides extensionally with `Halts`. -/
+lemma Rev_iff_Halts (Q : QueueProjector) (T : Trace) :
+  Rev Q T ↔ Halts T := by
+  -- `Rev Q T ↔ ∃ n, T n` by `Rev_iff_exists`,
+  -- and `Halts T ↔ ∃ n, T n` by definition.
+  simpa [Halts] using Rev_iff_exists Q T
+
+/-- Extensional equality: `Rev Q` *is* the direct halting predicate `Halts`. -/
+lemma Rev_eq_Halts (Q : QueueProjector) :
+  Rev Q = Halts := by
+  funext T
+  apply propext
+  exact Rev_iff_Halts Q T
+
+/-- In particular, the canonical revision `Rev0` is also just `Halts`. -/
+lemma Rev0_iff_Halts (T : Trace) :
+  Rev0 T ↔ Halts T := by
+  -- `Rev0 T = Rev canonicalQueueProjector T`
+  simpa [Rev0, Halts] using Rev_iff_exists canonicalQueueProjector T
+
+lemma Rev0_eq_Halts :
+  Rev0 = Halts := Rev_eq_Halts canonicalQueueProjector
+
+end LogicDissoc
+
+
+/-! ### Direct halting for a local reading -/
+
+namespace LogicDissoc
+
+universe u v
+
+/-- Direct halting for a local reading: the trace `LR Γ φ` ever holds. -/
+def HaltsLR {Context : Type v} {Sentence : Type u}
+    (LR : LocalReading Context Sentence)
+    (Γ : Context) (φ : Sentence) : Prop :=
+  ∃ n : ℕ, LR Γ φ n
+
+lemma HaltsLR_iff_Prov
+    {Context : Type v} {Sentence : Type u}
+    (LR : LocalReading Context Sentence)
+    (Γ : Context) (φ : Sentence) :
+  HaltsLR LR Γ φ ↔ Prov LR Γ φ := Iff.rfl
+
+/-- `verdict` is the reverse-halting version of `HaltsLR`, and they coincide. -/
+lemma verdict_iff_HaltsLR
+    {Context : Type v} {Sentence : Type u}
+    (LR : LocalReading Context Sentence)
+    (Γ : Context) (φ : Sentence) :
+  verdict LR Γ φ ↔ HaltsLR LR Γ φ := by
+  -- `verdict ↔ Prov` (déjà prouvé), et `Prov = HaltsLR` par déf.
+  simpa [HaltsLR_iff_Prov] using verdict_iff_Prov LR Γ φ
+
+/-- Pour un projecteur arbitraire `Q`, même résultat. -/
+lemma verdictQ_iff_HaltsLR
+    {Context : Type v} {Sentence : Type u}
+    (Q : QueueProjector)
+    (LR : LocalReading Context Sentence)
+    (Γ : Context) (φ : Sentence) :
+  verdictQ Q LR Γ φ ↔ HaltsLR LR Γ φ := by
+  -- `verdictQ ↔ Prov` (déjà prouvé), et `Prov = HaltsLR` par déf.
+  simpa [HaltsLR_iff_Prov] using verdictQ_iff_Prov Q LR Γ φ
+
+
+end LogicDissoc
