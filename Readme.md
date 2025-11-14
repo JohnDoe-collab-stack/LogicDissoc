@@ -8,11 +8,11 @@ This library builds a general “Gödel-style” obstruction index \(A^*\) on to
 - a **cone of positive linear obstructions** on \(\mathbb{N}^B\),
 - **Gödel directions** detecting which models are lost when extending a theory.
 
-For any admissible setup (PA, ZF/ZFC, QFT, etc.), the induced index
-\(A^*_{\mathrm{Gödel}}(S)\) satisfies:
+For any admissible setup (PA, ZF/ZFC, QFT, etc.), the induced index A*_Godel(S) satisfies:
 
-- \(A^*_{\mathrm{Gödel}}(S) = 0 \iff\) the extension \(\Gamma_{\mathrm{ref}} \cup S\) is conservative,
-- \(A^*_{\mathrm{Gödel}}(S) > 0 \iff\) the extension is semantically non-conservative,
+- A*_Godel(S) = 0 iff the extension Gamma_ref ∪ S is conservative,
+- A*_Godel(S) > 0 iff the extension is semantically non-conservative.
+
 
 with the **0 / >0 verdict independent** of the particular obstruction functional, and the **numeric value** quantifying the “strength” of the obstruction / incompleteness.
 
