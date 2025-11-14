@@ -3,7 +3,7 @@ import Mathlib.Data.Nat.Basic
 
 namespace LogicDissoc
 
-/-! ### Traces, Up -/
+/-! ### Traces and temporal closure -/
 
 /-- A temporal trace: at each time `n`, a proposition may hold. -/
 abbrev Trace := ℕ → Prop
@@ -54,10 +54,10 @@ lemma exists_up_tail_eq (T U : Trace)
 /-! ### Tail projectors and revision -/
 
 /--
-Abstract tail projector (in the SLE sense), acting on traces after `up`:
+Abstract tail projector acting on traces after `up`:
 
-* `Q1` : `pi (up T)` detects whether `T` is true at some time.
-* `Q2` : invariance of `pi (up T)` under tail equality of `up T`.
+* `Q1` : `pi (up T)` detects whether `T` ever holds at some time.
+* `Q2` : `pi (up T)` is invariant under tail equivalence of `up T`.
 -/
 structure QueueProjector where
   pi : Trace → Prop
@@ -110,8 +110,9 @@ def verdict {Context : Type v} {Sentence : Type u}
   Rev0 (LR Γ φ)
 
 /--
-“SLE-style” equivalence:
-the stabilized verdict for `(Γ, φ)` is true iff `φ` is “provable” from `Γ`
+Equivalence between stabilized verdict and provability:
+
+the stabilized verdict for `(Γ, φ)` is true iff `φ` is provable from `Γ`
 in the sense of the local reading `LR`.
 -/
 lemma verdict_iff_Prov
@@ -122,5 +123,32 @@ lemma verdict_iff_Prov
   unfold verdict Rev0 Rev Prov
   -- goal: `canonicalQueueProjector.pi (up (LR Γ φ)) ↔ ∃ n, LR Γ φ n`
   simpa using (canonicalQueueProjector.Q1 (LR Γ φ))
+
+
+/-! ### Robustness with respect to the queue projector -/
+
+/-- For any queue projector `Q`, `Rev Q T` is equivalent to `∃ n, T n`. -/
+lemma Rev_iff_exists (Q : QueueProjector) (T : Trace) :
+  Rev Q T ↔ ∃ n, T n := by
+  unfold Rev
+  simpa using Q.Q1 T
+
+/-- Verdict associated with an arbitrary `QueueProjector` `Q`. -/
+def verdictQ {Context : Type v} {Sentence : Type u}
+    (Q : QueueProjector)
+    (LR : LocalReading Context Sentence)
+    (Γ : Context) (φ : Sentence) : Prop :=
+  Rev Q (LR Γ φ)
+
+/-- For every `Q`, the stabilized verdict coincides with `Prov`. -/
+lemma verdictQ_iff_Prov
+    {Context : Type v} {Sentence : Type u}
+    (Q : QueueProjector)
+    (LR : LocalReading Context Sentence)
+    (Γ : Context) (φ : Sentence) :
+  verdictQ Q LR Γ φ ↔ Prov LR Γ φ := by
+  unfold verdictQ Prov
+  -- `Rev Q (LR Γ φ) ↔ ∃ n, LR Γ φ n`
+  simpa using (Rev_iff_exists Q (LR Γ φ))
 
 end LogicDissoc

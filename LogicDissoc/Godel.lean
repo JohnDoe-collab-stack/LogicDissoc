@@ -8,7 +8,7 @@ import LogicDissoc.DeltaObstruction
 
 namespace LogicDissoc
 
-universe u v
+universe u v w
 
 open Finset
 
@@ -465,14 +465,13 @@ by
 
 end DeltaRefGodel
 
-
-
 end GodelDynamic
 
+-- ============================================================================
+-- PART 4: DeltaRefDiagonal + Rev integration
+-- ============================================================================
 
 section DeltaRefDiagonal
-
-
 
 variable {Model : Type u} {Sentence : Type v} {Context : Type w}
 
@@ -557,9 +556,85 @@ lemma delta_ge_one_of_truth :
   have h := fp.meta_of_truth (E := E) (LR := LR) (Γ_ref := Γ_ref) htruth
   exact h.left
 
+/--
+If `G` is true in the reference system `E`, then for *every* queue projector
+`Q`, the stabilized verdict associated with `Q` never validates `G`.
+
+In other words: the non-provability of `G` is robust with respect to the choice
+of temporal revision policy (within the class of `QueueProjector`).
+-/
+lemma notVerdictQ_of_truth (Q : QueueProjector) :
+  refTruth (E := E) fp.G → ¬ verdictQ Q LR Γ_ref fp.G := by
+  intro htruth
+  -- 1. Raw non-provability (already proved).
+  have hNP : ¬ Prov LR Γ_ref fp.G :=
+    fp.notProv_of_truth (E := E) (LR := LR) (Γ_ref := Γ_ref) htruth
+  -- 2. Assume a positive verdict for Q.
+  intro hVerd
+  -- 3. verdictQ Q ↔ Prov, hence contradiction.
+  have hP : Prov LR Γ_ref fp.G :=
+    (verdictQ_iff_Prov (Q := Q) (LR := LR) (Γ := Γ_ref) (φ := fp.G)).1 hVerd
+  exact hNP hP
+
+end DeltaRefFixedPoint
+
+/-- Semantic soundness of the local proof reading with respect to a reference system `E`. -/
+structure ProvSound
+    (E : RefSystem Model Sentence)
+    (LR : LocalReading Context Sentence)
+    (Γ_ref : Context) : Prop where
+  sound : ∀ φ : Sentence, Prov LR Γ_ref φ → refTruth (E := E) φ
+
+/--
+Incompleteness of the triple `(E, LR, Γ_ref)`:
+
+there exists a sentence that is true in the reference system `E` but not
+provable from `Γ_ref` with respect to the local reading `LR`.
+-/
+structure Incomplete
+    (E : RefSystem Model Sentence)
+    (LR : LocalReading Context Sentence)
+    (Γ_ref : Context) : Prop where
+  exists_true_notProv :
+    ∃ φ : Sentence, refTruth (E := E) φ ∧ ¬ Prov LR Γ_ref φ
+
+namespace DeltaRefFixedPoint
+
+variable {E LR Γ_ref}
+variable (fp : DeltaRefFixedPoint (E := E) (LR := LR) (Γ_ref := Γ_ref))
+
+/--
+From a δ-ref fixed point `G` that is true in the reference system `E`, we obtain
+an incompleteness witness for `(E, LR, Γ_ref)` in the sense of `Incomplete`.
+-/
+lemma fixedPoint_gives_incomplete
+    (htruth : refTruth (E := E) fp.G) :
+  Incomplete (E := E) (LR := LR) (Γ_ref := Γ_ref) := by
+  refine ⟨?_⟩
+  refine ⟨fp.G, ?_⟩
+  have hNP : ¬ Prov LR Γ_ref fp.G :=
+    fp.notProv_of_truth (E := E) (LR := LR) (Γ_ref := Γ_ref) htruth
+  exact ⟨htruth, hNP⟩
+
+/--
+Strong form: from a true δ-ref fixed point, we obtain both incompleteness and
+robustness of non-provability with respect to all queue projectors `Q`.
+-/
+lemma fixedPoint_gives_incomplete_and_robust
+    (htruth : refTruth (E := E) fp.G) :
+  Incomplete (E := E) (LR := LR) (Γ_ref := Γ_ref) ∧
+  ∀ Q : QueueProjector, ¬ verdictQ Q LR Γ_ref fp.G := by
+  refine ⟨?_ , ?_⟩
+  · exact
+      fixedPoint_gives_incomplete
+        (E := E) (LR := LR) (Γ_ref := Γ_ref) fp htruth
+  · intro Q
+    exact
+      fp.notVerdictQ_of_truth
+        (E := E) (LR := LR) (Γ_ref := Γ_ref) Q htruth
+
 end DeltaRefFixedPoint
 
 end DeltaRefDiagonal
-
 
 end LogicDissoc
