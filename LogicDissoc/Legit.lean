@@ -7,13 +7,14 @@ open scoped BigOperators
 open Finset
 
 /--
-Une fonction d'obstruction "légitime" sur `B` :
-exactement une instance des axiomes abstraits `ObstructionAxiomsGen`.
-Interprétation :
-- toute mesure d'obstruction admissible au sens structurel vit dans ce schéma.
-- les lemmes ci-dessous rendent explicite que cette classe est un cône linéaire positif.
-- A⋆ est une instanciation particulière (choix de coefficients) de ce cône.
-- la liberté sur les coefficients est une renormalisation, pas une autre géométrie.
+A "legitimate" obstruction function on `B`:
+exactly an instance of the abstract axioms `ObstructionAxiomsGen`.
+
+Interpretation:
+- every structurally admissible obstruction measure lives in this scheme;
+- the lemmas below make explicit that this class is a positive linear cone;
+- A⋆ is a particular instantiation (choice of coefficients) of this cone;
+- the freedom on the coefficients is a renormalization, not a different geometry.
 -/
 structure LegitObstruction (B : Type*) [Fintype B] [DecidableEq B] where
   O : ObstructionAxiomsGen B
@@ -23,12 +24,13 @@ namespace LegitObstruction
 variable {B : Type*} [Fintype B] [DecidableEq B]
 
 /--
-Représentation linéaire canonique :
+Canonical linear representation:
 
-Toute fonction d'obstruction légitime est une forme linéaire positive
-sur les compteurs `GenCounters B`.
-Plus précisément, il existe `α : B → ℝ` avec `α b > 0` tel que
-`F c = ∑_{b ∈ univ} (c.v b) * α b` pour tout profil `c`.
+Every legitimate obstruction function is a positive linear form
+on the counters `GenCounters B`.
+
+More precisely, there exists `α : B → ℝ` with `α b > 0` such that
+`F c = ∑_{b ∈ univ} (c.v b) * α b` for every profile `c`.
 -/
 theorem linear_repr (L : LegitObstruction B) :
   ∃ α : B → ℝ,
@@ -44,19 +46,18 @@ theorem linear_repr (L : LegitObstruction B) :
     simpa using L.O.canonical c
 
 /--
-Noyau exact :
+Exact kernel:
 
-Pour une fonction d'obstruction légitime, l'annulation est équivalente
-à l'absence totale d'obstruction :
+For a legitimate obstruction function, vanishing is equivalent
+to the complete absence of obstruction:
 
-`F c = 0` ssi `c.v b = 0` pour tout `b`.
+`F c = 0` iff `c.v b = 0` for every `b`.
 -/
 theorem zero_iff_all_zero (L : LegitObstruction B) (c : GenCounters B) :
   L.O.F c = 0 ↔ ∀ b, c.v b = 0 := by
   simpa using (ObstructionAxiomsGen.zero_iff_all_zero (O := L.O) (c := c))
 
-/-- Toute fonction d'obstruction légitime est ≥ 0 sur tout profil.
--/
+/-- Every legitimate obstruction function is ≥ 0 on every profile. -/
 lemma F_nonneg (L : LegitObstruction B) (c : GenCounters B) :
   0 ≤ L.O.F c := by
   classical

@@ -6,8 +6,8 @@ universe u v
 variable {Sentence : Type u} {Model : Type v}
 variable (Sat : Model → Sentence → Prop)
 
-/-- Typeclasse « classe de modèles » pour `Γ`.
-    Fournit un porteur `carrier : Set Model` caractérisé par l'équivalence avec `ModE`. -/
+/-- Typeclass "class of models" for `Γ`.
+    Provides a carrier `carrier : Set Model` characterized by equivalence with `ModE`. -/
 class ModelClass (Sat : Model → Sentence → Prop) (Γ : Set Sentence) where
   carrier : Set Model
   mem_iff : ∀ {M : Model}, M ∈ carrier ↔ ∀ φ ∈ Γ, Sat M φ
@@ -16,12 +16,12 @@ namespace ModelClass
 
 variable {Sat}
 
-/-- Coercion vers `Set Model`. -/
+/-- Coercion to `Set Model`. -/
 instance instCoe (Sat : Model → Sentence → Prop) (Γ : Set Sentence) :
   CoeTC (ModelClass (Sat := Sat) Γ) (Set Model) :=
   ⟨fun MC => MC.carrier⟩
 
-/-- Raccourci lisible. -/
+/-- Readable shorthand. -/
 notation "Models" =>
   (fun (Sat : _ → _ → Prop) (Γ : Set _)
     [ModelClass (Sat := Sat) Γ] =>
@@ -30,7 +30,7 @@ notation "Models" =>
 @[simp] lemma mem_models_iff {Γ : Set Sentence} [MC : ModelClass (Sat := Sat) Γ]
     {M : Model} : M ∈ (Models Sat Γ) ↔ ∀ φ ∈ Γ, Sat M φ := MC.mem_iff
 
-/-- Instance canonique : `carrier = ModE`. -/
+/-- Canonical instance: `carrier = ModE`. -/
 instance (priority := 100) instModelClassDefault
     (Sat : Model → Sentence → Prop) (Γ : Set Sentence) :
     ModelClass (Sat := Sat) Γ where
@@ -47,7 +47,7 @@ namespace LogicDissoc
 open Set
 variable {Sat}
 
-/-- Version « classe de modèles » de la conservativité. -/
+/-- "Class of models" version of conservativity. -/
 lemma conservative_iff_subset_ThE_models (Γ Δ : Set Sentence) :
   (Models Sat (Γ ∪ Δ)) = (Models Sat Γ) ↔ Δ ⊆ ThE Sat (Models Sat Γ) := by
   simpa [ModelClass.Models_eq_ModE (Sat := Sat) Γ] using

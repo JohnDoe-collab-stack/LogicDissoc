@@ -4,67 +4,56 @@ import LogicDissoc.BasicSemantics
 import LogicDissoc.RefSystem
 import LogicDissoc.DeltaObstruction
 import LogicDissoc.Godel
+import Mathlib.Tactic
+
 
 namespace LogicDissoc.Examples
 
-/-! # Jouet : graphes sur 3 sommets
+/-! # Toy example: graphs on 3 vertices
 
-Instanciation concrète du framework LogicDissoc sur :
-- un monde fini de graphes `Graph3`,
-- quelques phrases `GraphSentence`,
-- un `RefSystem` jouet,
-- un `GodelDirection` jouet,
-- et l'obstruction canonique Δ_ref via `deltaObstruction`.
+Concrete instantiation of the LogicDissoc framework on:
+- a finite world of graphs `Graph3`,
+- a few sentences `GraphSentence`,
+- a toy `RefSystem`,
+- a toy `GodelDirection`,
+- and the canonical obstruction Δ_ref via `deltaObstruction`.
 
-Ce jouet illustre :
-- La dichotomie locale/non-locale via delta
-- La **granularité dans [1,2)** : différentes formules ont différents poids
-- La détection de non-conservativité via GodelDirection
-- Le théorème méta : frontière 0/>0 universelle
+This toy illustrates:
+- The local/non-local dichotomy via delta
+- **Granularity in [1,2)**: different formulas have different weights
+- Detection of non-conservativity via GodelDirection
+- The meta-theorem: universal 0/>0 boundary
 
-## Note sur `noncomputable`
+## Note on `noncomputable`
 
-La fonction `graphDelta` et les structures qui en dépendent sont marquées `noncomputable`
-car elles utilisent la division sur ℝ (type Real), qui n'est pas computable en Lean.
+The function `graphDelta` and the structures depending on it are marked `noncomputable`
+because they use division on ℝ (type Real), which is not computable in Lean.
 
-**Ceci est acceptable** pour un jouet pédagogique car :
-1. Les valeurs de delta sont **conceptuelles** (mesure de non-localité)
-2. Les **décisions** (GodelDirection.dec, sat, etc.) restent computables
-3. Les **preuves** restent constructives (pas de `classical` dans les tactiques)
-4. On démontre le framework, pas un algorithme effectif
+**This is acceptable** for a pedagogical toy because:
+1. Delta values are **conceptual** (a measure of non-locality)
+2. **Decisions** (GodelDirection.dec, sat, etc.) remain computable
+3. **Proofs** remain constructive (no `classical` in the tactics)
+4. We are demonstrating the framework, not an effective algorithm
 
-Dans une implémentation "production", on pourrait :
-- Utiliser ℚ (rationnels) au lieu de ℝ
-- Ou garder delta abstrait (axiomatique) sans valeurs numériques
-
-## Note sur les `sorry` arithmétiques
-
-Quelques preuves d'inégalités arithmétiques triviales (comme `1 ≤ 13/10` ou `17/10 < 2`)
-sont laissées en `sorry`. Ce sont des calculs numériques évidents qui devraient normalement
-se résoudre avec `norm_num`, mais qui peuvent nécessiter une configuration spécifique de
-Mathlib ou des imports supplémentaires. Dans un contexte de production, ces preuves seraient
-complétées soit :
-- Avec `norm_num` (si la version de Mathlib le supporte bien)
-- Avec des lemmes arithmétiques explicites sur les fractions
-- En convertissant vers ℚ puis en utilisant `decide`
-
-Ces `sorry` n'affectent pas la structure conceptuelle du jouet.
+In a "production" implementation, one could:
+- Use ℚ (rationals) instead of ℝ
+- Or keep delta abstract (axiomatic) without numerical values
 -/
 
 open LogicDissoc
 
 -- ============================================================
--- 1. Modèles et phrases
+-- 1. Models and sentences
 -- ============================================================
 
-/-- Graphe non-orienté simple sur 3 sommets {1,2,3}. -/
+/-- Simple undirected graph on 3 vertices {1,2,3}. -/
 structure Graph3 where
   e12 : Bool
   e13 : Bool
   e23 : Bool
 deriving DecidableEq, Repr
 
-/-- Phrases atomiques du jouet. -/
+/-- Atomic sentences of the toy example. -/
 inductive GraphSentence
   | top     -- ⊤
   | conn    -- Conn
@@ -77,15 +66,15 @@ open GraphSentence
 
 namespace Graph3
 
-/-- Connexité (définition jouet) : au moins 2 arêtes "enchaînées". -/
+/-- Connectivity (toy definition): at least 2 "chained" edges. -/
 def isConnected (g : Graph3) : Bool :=
   (g.e12 && g.e13) || (g.e12 && g.e23) || (g.e13 && g.e23)
 
-/-- Triangle complet. -/
+/-- Complete triangle. -/
 def hasTriangle (g : Graph3) : Bool :=
   g.e12 && g.e13 && g.e23
 
-/-- Quelques graphes utiles pour les preuves. -/
+/-- Some useful graphs for the proofs. -/
 def g0 : Graph3 :=
   { e12 := false, e13 := false, e23 := false }
 
@@ -99,7 +88,7 @@ end Graph3
 
 open Graph3
 
-/-- Satisfaction des phrases par un graphe. -/
+/-- Satisfaction of sentences by a graph. -/
 def sat (g : Graph3) : GraphSentence → Prop
   | top     => True
   | conn    => g.isConnected = true
@@ -108,17 +97,17 @@ def sat (g : Graph3) : GraphSentence → Prop
   | notTri  => g.hasTriangle = false
 
 -- ============================================================
--- 2. RefSystem sur les graphes
+-- 2. RefSystem on graphs
 -- ============================================================
 
-/-- δ jouet : 0 pour ⊤, valeurs dans [1,2) pour les autres.
+/-- Toy δ: 0 for ⊤, values in [1,2) for the others.
 
-    Les valeurs différenciées illustrent que différentes formules
-    ont différents "poids de non-localité" :
-    - conn : 1.3 (structure de connectivité)
-    - notConn : 1.4 (négation de connectivité, poids légèrement différent)
-    - tri : 1.7 (structure globale forte - triangle complet)
-    - notTri : 1.2 (propriété faible)
+    The distinct values illustrate that different formulas
+    have different "non-locality weights":
+    - conn : 1.3 (connectivity structure)
+    - notConn : 1.4 (negation of connectivity, slightly different weight)
+    - tri : 1.7 (strong global structure - complete triangle)
+    - notTri : 1.2 (weak property)
 -/
 noncomputable def graphDelta (φ : GraphSentence) : ℝ :=
   match φ with
@@ -129,15 +118,16 @@ noncomputable def graphDelta (φ : GraphSentence) : ℝ :=
   | GraphSentence.notTri  => 12/10  -- 1.2
 
 
-/-- Système de référence jouet sur `Graph3`. -/
+
+/-- Toy reference system on `Graph3`. -/
 noncomputable def GraphRefSystem : RefSystem Graph3 GraphSentence :=
 { Sat   := fun g φ => sat g φ,
   delta := graphDelta,
   -- (DR0) : δ φ = 0 ↔ φ ∈ ThE(ModE ∅)
   DR0 := by
     intro φ
-    -- On utilise que ModE(sat, ∅) = ensemble de tous les graphes,
-    -- et ThE sur cet ensemble = "φ est vraie dans tous les graphes".
+    -- We use that ModE(sat, ∅) = the set of all graphs,
+    -- and ThE on this set = "φ is true in all graphs".
     have hThE :
       ThE (Sat := sat) (ModE (Sat := sat) (∅ : Set GraphSentence)) =
         { ψ : GraphSentence | ∀ g : Graph3, sat g ψ } := by
@@ -145,12 +135,12 @@ noncomputable def GraphRefSystem : RefSystem Graph3 GraphSentence :=
       simp [ThE, ModE]
     cases φ with
     | top =>
-        -- δ(top) = 0 et ⊤ est vraie partout
+        -- δ(top) = 0 and ⊤ is true everywhere
         constructor
         · intro _
           -- top ∈ ThE(ModE ∅)
           have h : top ∈ { ψ : GraphSentence | ∀ g : Graph3, sat g ψ } := by
-            -- ⊤ est vraie dans tous les graphes
+            -- ⊤ is true in all graphs
             simp [sat]
           simpa [hThE] using h
         · intro _
@@ -159,12 +149,12 @@ noncomputable def GraphRefSystem : RefSystem Graph3 GraphSentence :=
     | conn =>
         constructor
         · intro hδ
-          -- δ(conn) ≠ 0, donc hypothèse impossible
+          -- δ(conn) ≠ 0, so the assumption is impossible
           have : graphDelta conn ≠ 0 := by
             norm_num [graphDelta]
           exact (this hδ).elim
         · intro hmem
-          -- On déplie l'appartenance à ThE(ModE ∅) via hThE
+          -- Unfold membership in ThE(ModE ∅) via hThE
           have hAll : ∀ g : Graph3, sat g conn := by
             have hIn :
               conn ∈ ThE (Sat := sat) (ModE (Sat := sat) (∅ : Set GraphSentence)) :=
@@ -172,7 +162,7 @@ noncomputable def GraphRefSystem : RefSystem Graph3 GraphSentence :=
             have : conn ∈ { ψ : GraphSentence | ∀ g, sat g ψ } := by
               simpa [hThE] using hIn
             exact this
-          -- Mais g0 n'est pas connexe : contradiction
+          -- But g0 is not connected: contradiction
           have hNot : ¬ sat Graph3.g0 conn := by
             simp [sat, Graph3.isConnected, Graph3.g0]
           have : False := hNot (hAll _)
@@ -192,7 +182,7 @@ noncomputable def GraphRefSystem : RefSystem Graph3 GraphSentence :=
             have : tri ∈ { ψ : GraphSentence | ∀ g, sat g ψ } := by
               simpa [hThE] using hIn
             exact this
-          -- g0 n'a pas de triangle : contradiction
+          -- g0 has no triangle: contradiction
           have hNot : ¬ sat Graph3.g0 tri := by
             simp [sat, Graph3.hasTriangle, Graph3.g0]
           have : False := hNot (hAll _)
@@ -212,7 +202,7 @@ noncomputable def GraphRefSystem : RefSystem Graph3 GraphSentence :=
             have : notConn ∈ { ψ : GraphSentence | ∀ g, sat g ψ } := by
               simpa [hThE] using hIn
             exact this
-          -- g4 est connexe, donc notConn faux
+          -- g4 is connected, so notConn is false
           have hNot : ¬ sat Graph3.g4 notConn := by
             simp [sat, Graph3.isConnected, Graph3.g4]
           have : False := hNot (hAll _)
@@ -232,27 +222,27 @@ noncomputable def GraphRefSystem : RefSystem Graph3 GraphSentence :=
             have : notTri ∈ { ψ : GraphSentence | ∀ g, sat g ψ } := by
               simpa [hThE] using hIn
             exact this
-          -- g7 a un triangle, donc notTri faux
+          -- g7 has a triangle, so notTri is false
           have hNot : ¬ sat Graph3.g7 notTri := by
             simp [sat, Graph3.hasTriangle, Graph3.g7]
           have : False := hNot (hAll _)
           exact this.elim
 
-  -- (DR1) : φ non locale → δ(φ) ∈ [1,2)
+  -- (DR1) : non-local φ → δ(φ) ∈ [1,2)
   DR1 := by
     intro φ hNotLocal
-    -- "Locale" = φ ∈ ThE(ModE ∅) = vraie partout.
-    -- On a vu que seule top est vraie partout.
+    -- "Local" = φ ∈ ThE(ModE ∅) = true everywhere.
+    -- We have seen that only top is true everywhere.
     have hThE :
       ThE (Sat := sat) (ModE (Sat := sat) (∅ : Set GraphSentence)) =
         { ψ : GraphSentence | ∀ g : Graph3, sat g ψ } := by
       ext ψ
       simp [ThE, ModE]
-    -- Montrer que φ ≠ top
+    -- Show that φ ≠ top
     have hφ_ne_top : φ ≠ top := by
       intro hEq
       subst hEq
-      -- top est dans ThE(ModE ∅), contradiction
+      -- top is in ThE(ModE ∅), contradiction
       have : top ∈ ThE (Sat := sat) (ModE (Sat := sat) (∅ : Set GraphSentence)) := by
         simp [hThE, sat]
       exact hNotLocal this
@@ -261,132 +251,141 @@ noncomputable def GraphRefSystem : RefSystem Graph3 GraphSentence :=
         exact (hφ_ne_top rfl).elim
     | conn =>
         constructor
-        · -- 1 ≤ 13/10 (calcul arithmétique trivial)
-          unfold graphDelta; sorry
-        · -- 13/10 < 2 (calcul arithmétique trivial)
-          unfold graphDelta; sorry
+        · -- 1 ≤ 13/10
+          unfold graphDelta
+          norm_num
+        · -- 13/10 < 2
+          unfold graphDelta
+          norm_num
     | tri =>
         constructor
         · -- 1 ≤ 17/10
-          unfold graphDelta; sorry
+          unfold graphDelta
+          norm_num
         · -- 17/10 < 2
-          unfold graphDelta; sorry
+          unfold graphDelta
+          norm_num
     | notConn =>
         constructor
         · -- 1 ≤ 14/10
-          unfold graphDelta; sorry
+          unfold graphDelta
+          norm_num
         · -- 14/10 < 2
-          unfold graphDelta; sorry
+          unfold graphDelta
+          norm_num
     | notTri =>
         constructor
         · -- 1 ≤ 12/10
-          unfold graphDelta; sorry
+          unfold graphDelta
+          norm_num
         · -- 12/10 < 2
-          unfold graphDelta; sorry,
+          unfold graphDelta
+          norm_num,
 
-  -- Invariance sémantique : deux phrases équivalentes ont même δ
-  -- CRITIQUE : Avec valeurs différenciées, on force les vraies preuves
+
+  -- Semantic invariance: two equivalent sentences have the same δ
+  -- CRITICAL: With differentiated values, we force the real proofs
   delta_semantic_invariance := by
     intro φ ψ hEquiv
-    -- Stratégie : cas par cas sur (φ, ψ)
-    -- - Diagonale : rfl
-    -- - Non-diagonale : exfalso via contre-exemple
+    -- Strategy: case analysis on (φ, ψ)
+    -- - Diagonal: rfl
+    -- - Off-diagonal: exfalso via a counterexample
     cases φ <;> cases ψ
 
-    -- ===== Ligne top =====
+    -- ===== Row top =====
     · -- (top, top)
       rfl
-    · -- (top, conn) : distingués par g0
+    · -- (top, conn): distinguished by g0
       exfalso
       have h := hEquiv Graph3.g0
       simp [sat, Graph3.isConnected, Graph3.g0] at h
-    · -- (top, tri) : distingués par g0
+    · -- (top, tri): distinguished by g0
       exfalso
       have h := hEquiv Graph3.g0
       simp [sat, Graph3.hasTriangle, Graph3.g0] at h
-    · -- (top, notConn) : distingués par g4
+    · -- (top, notConn): distinguished by g4
       exfalso
       have h := hEquiv Graph3.g4
       simp [sat, Graph3.isConnected, Graph3.g4] at h
-    · -- (top, notTri) : distingués par g7
+    · -- (top, notTri): distinguished by g7
       exfalso
       have h := hEquiv Graph3.g7
       simp [sat, Graph3.hasTriangle, Graph3.g7] at h
 
-    -- ===== Ligne conn =====
-    · -- (conn, top) : distingués par g0
+    -- ===== Row conn =====
+    · -- (conn, top): distinguished by g0
       exfalso
       have h := hEquiv Graph3.g0
       simp [sat, Graph3.isConnected, Graph3.g0] at h
     · -- (conn, conn)
       rfl
-    · -- (conn, tri) : distingués par g4 (conn mais pas tri)
+    · -- (conn, tri): distinguished by g4 (conn but not tri)
       exfalso
       have h := hEquiv Graph3.g4
       simp [sat, Graph3.isConnected, Graph3.hasTriangle, Graph3.g4] at h
-    · -- (conn, notConn) : distingués par g0 (ou g4)
+    · -- (conn, notConn): distinguished by g0 (or g4)
       exfalso
       have h := hEquiv Graph3.g0
       simp [sat, Graph3.isConnected, Graph3.g0] at h
-    · -- (conn, notTri) : distingués par g7 (conn et tri, donc pas notTri)
+    · -- (conn, notTri): distinguished by g7 (conn and tri, hence not notTri)
       exfalso
       have h := hEquiv Graph3.g7
       simp [sat, Graph3.isConnected, Graph3.hasTriangle, Graph3.g7] at h
 
-    -- ===== Ligne tri =====
-    · -- (tri, top) : distingués par g0
+    -- ===== Row tri =====
+    · -- (tri, top): distinguished by g0
       exfalso
       have h := hEquiv Graph3.g0
       simp [sat, Graph3.hasTriangle, Graph3.g0] at h
-    · -- (tri, conn) : distingués par g4
+    · -- (tri, conn): distinguished by g4
       exfalso
       have h := hEquiv Graph3.g4
       simp [sat, Graph3.isConnected, Graph3.hasTriangle, Graph3.g4] at h
     · -- (tri, tri)
       rfl
-    · -- (tri, notConn) : distingués par g7 (tri et conn)
+    · -- (tri, notConn): distinguished by g7 (tri and conn)
       exfalso
       have h := hEquiv Graph3.g7
       simp [sat, Graph3.isConnected, Graph3.hasTriangle, Graph3.g7] at h
-    · -- (tri, notTri) : distingués par g7
+    · -- (tri, notTri): distinguished by g7
       exfalso
       have h := hEquiv Graph3.g7
       simp [sat, Graph3.hasTriangle, Graph3.g7] at h
 
-    -- ===== Ligne notConn =====
-    · -- (notConn, top) : distingués par g4
+    -- ===== Row notConn =====
+    · -- (notConn, top): distinguished by g4
       exfalso
       have h := hEquiv Graph3.g4
       simp [sat, Graph3.isConnected, Graph3.g4] at h
-    · -- (notConn, conn) : distingués par g0
+    · -- (notConn, conn): distinguished by g0
       exfalso
       have h := hEquiv Graph3.g0
       simp [sat, Graph3.isConnected, Graph3.g0] at h
-    · -- (notConn, tri) : distingués par g7
+    · -- (notConn, tri): distinguished by g7
       exfalso
       have h := hEquiv Graph3.g7
       simp [sat, Graph3.isConnected, Graph3.hasTriangle, Graph3.g7] at h
     · -- (notConn, notConn)
       rfl
-    · -- (notConn, notTri) : distingués par g4 (conn + notTri ≠ notConn + notTri)
+    · -- (notConn, notTri): distinguished by g4 (conn + notTri ≠ notConn + notTri)
       exfalso
       have h := hEquiv Graph3.g4
       simp [sat, Graph3.isConnected, Graph3.hasTriangle, Graph3.g4] at h
 
-    -- ===== Ligne notTri =====
-    · -- (notTri, top) : distingués par g7
+    -- ===== Row notTri =====
+    · -- (notTri, top): distinguished by g7
       exfalso
       have h := hEquiv Graph3.g7
       simp [sat, Graph3.hasTriangle, Graph3.g7] at h
-    · -- (notTri, conn) : distingués par g7
+    · -- (notTri, conn): distinguished by g7
       exfalso
       have h := hEquiv Graph3.g7
       simp [sat, Graph3.isConnected, Graph3.hasTriangle, Graph3.g7] at h
-    · -- (notTri, tri) : distingués par g7
+    · -- (notTri, tri): distinguished by g7
       exfalso
       have h := hEquiv Graph3.g7
       simp [sat, Graph3.hasTriangle, Graph3.g7] at h
-    · -- (notTri, notConn) : distingués par g4
+    · -- (notTri, notConn): distinguished by g4
       exfalso
       have h := hEquiv Graph3.g4
       simp [sat, Graph3.isConnected, Graph3.hasTriangle, Graph3.g4] at h
@@ -397,21 +396,21 @@ noncomputable def GraphRefSystem : RefSystem Graph3 GraphSentence :=
 notation "E_graph" => GraphRefSystem
 
 -- ============================================================
--- 3. Directions de Gödel sur les graphes
+-- 3. Gödel directions on graphs
 -- ============================================================
 
-/-- Directions sémantiques du jouet. -/
+/-- Semantic directions of the toy example. -/
 inductive GraphDir
   | conn
   | nonconn
   | tri
 deriving DecidableEq, Repr
 
-/-- Finset explicite des directions. -/
+/-- Explicit finset of directions. -/
 def allGraphDir : Finset GraphDir :=
   { GraphDir.conn, GraphDir.nonconn, GraphDir.tri }
 
-/-- Instance finie pour `GraphDir`. -/
+/-- Finite instance for `GraphDir`. -/
 instance : Fintype GraphDir where
   elems := allGraphDir
   complete := by
@@ -421,13 +420,13 @@ instance : Fintype GraphDir where
 
 open GraphDir
 
-/-- Probe : formule testée par chaque direction. -/
+/-- Probe: formula tested by each direction. -/
 def graphProbe : GraphDir → GraphSentence
   | GraphDir.conn    => GraphSentence.conn
   | GraphDir.nonconn => GraphSentence.notConn
   | GraphDir.tri     => GraphSentence.tri
 
-/-- Prédicat de réalisation d'une direction par un graphe. -/
+/-- Predicate of realization of a direction by a graph. -/
 def graphDirPred : GraphDir → Graph3 → Prop
   | GraphDir.conn,    g => sat g GraphSentence.conn
   | GraphDir.nonconn, g => sat g GraphSentence.notConn
@@ -436,7 +435,9 @@ def graphDirPred : GraphDir → Graph3 → Prop
 
 open RefSystem
 
-/-- Toutes les formules `probe b` sont non-locales dans `GraphRefSystem`. -/
+
+
+/-- All formulas `probe b` are non-local in `GraphRefSystem`. -/
 lemma graphProbe_nonlocal :
   ∀ b : GraphDir, GraphRefSystem.isNonlocal (graphProbe b) := by
   intro b
@@ -445,17 +446,18 @@ lemma graphProbe_nonlocal :
   cases b
   · -- conn: 1 ≤ 13/10 < 2
     unfold graphProbe GraphRefSystem graphDelta
-    constructor <;> sorry  -- calculs arithmétiques triviaux
+    constructor <;> norm_num
   · -- nonconn: 1 ≤ 14/10 < 2
     unfold graphProbe GraphRefSystem graphDelta
-    constructor <;> sorry  -- calculs arithmétiques triviaux
+    constructor <;> norm_num
   · -- tri: 1 ≤ 17/10 < 2
     unfold graphProbe GraphRefSystem graphDelta
-    constructor <;> sorry  -- calculs arithmétiques triviaux
+    constructor <;> norm_num
+
 
 open LogicDissoc.GodelDirection
 
-/-- Instance Fintype pour Graph3. -/
+/-- Fintype instance for Graph3. -/
 instance : Fintype Graph3 where
   elems := {
     { e12 := false, e13 := false, e23 := false },
@@ -477,7 +479,7 @@ instance (g : Graph3) (φ : GraphSentence) : Decidable (sat g φ) := by
 instance (b : GraphDir) (g : Graph3) : Decidable (graphDirPred b g) := by
   cases b <;> unfold graphDirPred <;> infer_instance
 
-/-- GodelDirection jouet pour les graphes. -/
+/-- Toy GodelDirection for graphs. -/
 def GraphGodelDirection :
   GodelDirection sat (∅ : Set GraphSentence) GraphDir :=
 { P := graphDirPred,
@@ -553,12 +555,12 @@ def GraphGodelDirection :
 
 
 -- ============================================================
--- 4. Obstruction canonique Δ et indice A*
+-- 4. Canonical obstruction Δ and index A*
 -- ============================================================
 
 open RefSystem
 
-/-- Obstruction canonique δ pour le jouet des graphes. -/
+/-- Canonical δ obstruction for the graph toy model. -/
 noncomputable def GraphDeltaObstruction : LegitObstruction GraphDir :=
   RefSystem.deltaObstruction
     (E := E_graph)
@@ -566,15 +568,15 @@ noncomputable def GraphDeltaObstruction : LegitObstruction GraphDir :=
     graphProbe
     graphProbe_nonlocal
 
-/-- Abbréviation : batterie de phrases sur les graphes. -/
+/-- Abbreviation: battery of sentences on graphs. -/
 abbrev GraphBattery := Battery GraphSentence
 
-/-- Indice A* de Gödel, spécialisé au système de référence des graphes.
+/-- Gödel A* index, specialized to the graph reference system.
 
-    Avec les valeurs différenciées de delta, on obtient :
-    - Extension par {¬conn} : A* ≈ 1·1.3 + contributions autres directions
-    - Extension par {tri} : A* différent selon les directions éliminées
-    - Cela illustre la **quantification de l'incomplétude**
+    With the differentiated delta values, we obtain:
+    - Extension by {¬conn}: A* ≈ 1·1.3 + contributions from other directions
+    - Extension by {tri}: A* different depending on which directions are eliminated
+    - This illustrates the **quantification of incompleteness**
 -/
 noncomputable def graphAstar (S : GraphBattery) : ℝ :=
   Astar_Godel_delta
@@ -587,29 +589,28 @@ noncomputable def graphAstar (S : GraphBattery) : ℝ :=
     S
 
 /-!
-## Résumé pédagogique
+## Pedagogical summary
 
-Ce jouet démontre le framework complet avec **granularité dans [1,2)** :
+This toy example demonstrates the full framework with **granularity in [1,2)**:
 
-### Valeurs de delta :
-- top : 0 (locale)
-- conn : 1.3 (connectivité)
-- notConn : 1.4 (négation de connectivité)
-- tri : 1.7 (triangle - forte globalité)
-- notTri : 1.2 (négation de triangle - faible globalité)
+### Delta values:
+- top : 0 (local)
+- conn : 1.3 (connectivity)
+- notConn : 1.4 (negation of connectivity)
+- tri : 1.7 (triangle - strong globality)
+- notTri : 1.2 (negation of triangle - weak globality)
 
-### Observations :
-1. Les différentes valeurs montrent que certaines formules sont "plus globales" que d'autres
-2. L'obstruction Astar pondère les directions éliminées par leur poids delta
-3. Extension {tri} aura un poids plus fort que {notTri} dans l'obstruction
-4. Le théorème 0/>0 reste universel : seul le verdict binaire compte pour la conservativité
-5. Mais la **valeur numérique** d'Astar encode la "force" de la non-conservativité
+### Observations:
+1. The different values show that some formulas are "more global" than others
+2. The Astar obstruction weights the eliminated directions by their delta weight
+3. Extension {tri} will have a stronger weight than {notTri} in the obstruction
+4. The 0/>0 theorem remains universal: only the binary verdict matters for conservativity
+5. But the **numerical value** of Astar encodes the "strength" of non-conservativity
 
-### Points clés :
-- ✓ 100% constructif (pas de noncomputable)
-- ✓ Granularité pédagogique dans [1,2)
-- ✓ Tous les cas de delta_semantic_invariance prouvés proprement
-- ✓ Illustration complète du framework LogicDissoc
+### Key points:
+- ✓ Pedagogical granularity in [1,2)
+- ✓ All cases of delta_semantic_invariance proved cleanly
+- ✓ Complete illustration of the LogicDissoc framework
 -/
 
 end LogicDissoc.Examples

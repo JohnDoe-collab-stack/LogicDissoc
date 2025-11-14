@@ -119,15 +119,15 @@ lemma score_ne_zero_iff_nonConservative (S : Finset LS.Sentence) :
   unfold LocalBridgeSystem.nonConservative
   constructor
   · intro h hcons
-    -- sens 1 : (score ≠ 0) → (¬ conservative)
-    -- contradiction si on suppose conservative
+    -- direction 1: (score ≠ 0) → (¬ conservative)
+    -- contradiction if we assume conservative
     have hz :
         score LS L S = 0 :=
       (score_eq_zero_iff_conservative (LS := LS) (L := L) S).2 hcons
     exact h hz
   · intro h hz
-    -- sens 2 : (¬ conservative) → (score ≠ 0)
-    -- contradiction si on suppose score = 0
+    -- direction 2: (¬ conservative) → (score ≠ 0)
+    -- contradiction if we assume score = 0
     have hcons :
         LS.conservative S :=
       (score_eq_zero_iff_conservative (LS := LS) (L := L) S).1 hz

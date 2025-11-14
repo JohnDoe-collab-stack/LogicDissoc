@@ -9,14 +9,14 @@ namespace LogicDissoc
 open scoped BigOperators
 open Finset
 
-/-- Vecteur de compteurs générique sur un ensemble de types d'obstruction `B`.
--/
+/-- Generic counter vector over a set of obstruction types `B`. -/
 structure GenCounters (B : Type*) where
   v : B → ℕ
 
 /--
-Axiomes abstraits pour une fonction d'obstruction sur `ℕ^B`.
-On somme toujours sur `Finset.univ`, donc on exige `[Fintype B] [DecidableEq B]`.
+Abstract axioms for an obstruction function on `ℕ^B`.
+
+We always sum over `Finset.univ`, so we require `[Fintype B] [DecidableEq B]`.
 -/
 structure ObstructionAxiomsGen (B : Type*) [Fintype B] [DecidableEq B] where
   F   : GenCounters B → ℝ
@@ -31,8 +31,7 @@ namespace ObstructionAxiomsGen
 variable {B : Type*} [Fintype B] [DecidableEq B]
 variable (O : ObstructionAxiomsGen B)
 
-/-- Additivité + f(0)=0 ⇒ linéarité sur ℕ pour chaque type.
--/
+/-- Additivity + f(0)=0 ⇒ linearity over ℕ for each type. -/
 lemma f_linear (b : B) : ∀ n, O.f b n = (n : ℝ) * O.f b 1 := by
   intro n
   induction n with
@@ -49,16 +48,14 @@ lemma f_linear (b : B) : ∀ n, O.f b n = (n : ℝ) * O.f b 1 := by
         _ = ((Nat.succ n : ℕ) : ℝ) * O.f b 1 := by
               simp [Nat.succ_eq_add_one, add_mul, one_mul, add_comm]
 
-/-- Coefficient α_b associé à chaque type b.
--/
+/-- Coefficient `α_b` associated to each type `b`. -/
 def α (b : B) : ℝ := O.f b 1
 
 lemma α_pos (b : B) : 0 < O.α b := by
   have h1 : 0 < (1 : ℕ) := Nat.succ_pos 0
   simpa [α] using O.f_pos b h1
 
-/-- Forme linéaire canonique : `F(c) = ∑ b (c.v b) * α_b`.
--/
+/-- Canonical linear form: `F(c) = ∑ b (c.v b) * α_b`. -/
 lemma canonical (c : GenCounters B) :
   O.F c = ∑ b ∈ (Finset.univ : Finset B), (c.v b : ℝ) * O.α b := by
   classical
@@ -70,8 +67,8 @@ lemma canonical (c : GenCounters B) :
   simpa [hlin] using hF
 
 /--
-Si `f b ≥ 0` pour tout `b` et `∑_{b ∈ univ} f b = 0`,
-alors `f b = 0` pour tout `b`.
+If `f b ≥ 0` for all `b` and `∑_{b ∈ univ} f b = 0`,
+then `f b = 0` for all `b`.
 -/
 lemma all_terms_zero_of_sum_zero
   (f : B → ℝ)
@@ -117,8 +114,8 @@ lemma all_terms_zero_of_sum_zero
 
 
 /--
-Critère zéro général :
-`O.F c = 0` ssi tous les compteurs `c.v b` sont nuls.
+General zero criterion:
+`O.F c = 0` iff all counters `c.v b` are zero.
 -/
 lemma zero_iff_all_zero (c : GenCounters B) :
   O.F c = 0 ↔ (∀ b, c.v b = 0) := by
@@ -156,17 +153,17 @@ lemma zero_iff_all_zero (c : GenCounters B) :
 
 variable {B : Type*} [Fintype B]
 
-/-- Mesure totale d'un profil d'obstruction : somme des multiplicités.
--/
+/-- Total mass of an obstruction profile: sum of multiplicities. -/
 def mu (c : GenCounters B) [DecidableEq B] : ℕ :=
   ∑ b ∈ (Finset.univ : Finset B), c.v b
 
 /--
-Induction forte sur les profils `GenCounters B` via la mesure `mu`.
-Si `P` vaut pour tout profil de mesure nulle,
-et si pour tout profil `c` la validité de `P` pour tous les profils
-de mesure strictement plus petite entraîne `P c`,
-alors `P` vaut pour tout profil.
+Strong induction on profiles `GenCounters B` via the measure `mu`.
+
+If `P` holds for every profile of measure zero,
+and if for every profile `c` the validity of `P` for all profiles
+with strictly smaller measure implies `P c`,
+then `P` holds for every profile.
 -/
 lemma induction_on_mu
   [DecidableEq B]
@@ -202,8 +199,7 @@ lemma induction_on_mu
 end ObstructionAxiomsGen
 
 
-/-- Verdict logique "aucune obstruction" extrait d'un profil de compteurs.
--/
+/-- Logical verdict "no obstruction" extracted from a counter profile. -/
 def sp_ok {B} [Fintype B] [DecidableEq B]
     (O : ObstructionAxiomsGen B) (c : GenCounters B) : Prop :=
   O.F c = 0
@@ -222,8 +218,7 @@ variable {B Test : Type*} [Fintype B] [DecidableEq B] [Fintype Test]
 variable (J : Test → GenCounters B)
 variable (O : ObstructionAxiomsGen B)
 
-/-- Profil global = somme des compteurs sur tous les tests.
--/
+/-- Global profile = sum of counters over all tests. -/
 def globalCounters : GenCounters B :=
   { v := fun b =>
       ∑ t ∈ (Finset.univ : Finset Test), (J t).v b }

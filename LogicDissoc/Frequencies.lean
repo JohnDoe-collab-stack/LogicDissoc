@@ -10,21 +10,21 @@ open scoped BigOperators
 open Finset
 
 /--
-Fréquence de succès (valeurs `true`) sur un type fini.
-Totale et calculable:
-- si `Fintype.card ι = 0` alors `0`,
-- sinon (# {i | v i = true}) / (#ι) dans ℚ.
+Success frequency (values `true`) on a finite type.
+Total and computable:
+- if `Fintype.card ι = 0` then `0`,
+- otherwise (# {i | v i = true}) / (#ι) in ℚ.
 -/
 def freqTrue {ι : Type*} [Fintype ι] [DecidableEq ι] (v : ι → Bool) : ℚ :=
   if _ : Fintype.card ι = 0 then 0
   else ((univ.filter (fun i => v i = true)).card : ℚ) / (Fintype.card ι : ℚ)
 
-/-- Fréquence d’échec correspondante.
+/-- Corresponding failure frequency.
 -/
 def freqFalse {ι : Type*} [Fintype ι] [DecidableEq ι] (v : ι → Bool) : ℚ :=
   1 - freqTrue v
 
-/-- Formule explicite de `freqTrue` quand la batterie est non vide.
+/-- Explicit formula for `freqTrue` when the index set is nonempty.
 -/
 lemma freqTrue_eq_of_nonempty
     {ι} [Fintype ι] [DecidableEq ι] [Nonempty ι]
@@ -122,7 +122,7 @@ lemma freqFalse_le_one
   simpa [sub_eq_add_neg] using h
 
 
-/-- Version empirique de A⋆ en fonction des fréquences.
+/-- Empirical version of A⋆ in terms of frequencies.
 -/
 def Ahat (α β γ p_hat k_hat e_hat : ℚ) : ℚ :=
   α * (1 - p_hat) + β * (1 - k_hat) + γ * e_hat

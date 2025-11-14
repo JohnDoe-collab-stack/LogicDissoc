@@ -17,11 +17,11 @@ variable (E : RefSystem Model Sentence)
 variable {B : Type w} [Fintype B] [DecidableEq B]
 
 /--
-Axiomes d'une obstruction canonique construite à partir d'un système
-de référence `E` et d'une batterie de tests non locaux `probe : B → Sentence`.
+Axioms of a canonical obstruction built from a reference system `E`
+and a family of non-local tests `probe : B → Sentence`.
 
-Intuition : chaque type `b` est pondéré par `δ (probe b)`, et l'obstruction
-d'un profil `c` est la somme des contributions `(c.v b) * δ (probe b)`.
+Intuition: each type `b` is weighted by `δ (probe b)`, and the obstruction
+of a profile `c` is the sum of the contributions `(c.v b) * δ (probe b)`.
 -/
 def deltaObstructionAxioms
     (probe : B → Sentence)
@@ -32,7 +32,7 @@ def deltaObstructionAxioms
       (c.v b : ℝ) * E.delta (probe b),
   f := fun b n => (n : ℝ) * E.delta (probe b),
   hF := by
-    -- Par définition, F c est déjà la somme de `f b (c.v b)` sur `univ`.
+    -- By definition, F c is already the sum of `f b (c.v b)` over `univ`.
     intro c
     classical
     rfl,
@@ -42,17 +42,17 @@ def deltaObstructionAxioms
     simp,
   f_pos := by
     intro b n hn
-    -- On utilise le fait que `probe b` est non locale pour obtenir δ > 0
+    -- We use that `probe b` is non-local to get δ > 0
     have hband :
         1 ≤ E.delta (probe b) ∧ E.delta (probe b) < 2 :=
       (E.nonlocal_iff_delta_band (probe b)).1 (h_nonlocal b)
     have hδ_pos : 0 < E.delta (probe b) := by
       have h1_pos : (0 : ℝ) < 1 := zero_lt_one
       exact lt_of_lt_of_le h1_pos hband.left
-    -- et `0 < n` ⇒ `0 < (n : ℝ)`
+    -- and `0 < n` ⇒ `0 < (n : ℝ)`
     have hnR : (0 : ℝ) < (n : ℝ) := by
       exact_mod_cast hn
-    -- donc le produit est strictement positif
+    -- hence the product is strictly positive
     have := mul_pos hnR hδ_pos
     simpa using this,
   f_add := by
@@ -61,8 +61,8 @@ def deltaObstructionAxioms
     simp [Nat.cast_add, add_mul] }
 
 /--
-Obstruction légitime canonique associée à `E` et à une batterie
-de tests non locaux `probe : B → Sentence`.
+Canonical legitimate obstruction associated with `E` and a family
+of non-local tests `probe : B → Sentence`.
 -/
 def deltaObstruction
     (probe : B → Sentence)
@@ -71,7 +71,7 @@ def deltaObstruction
   ⟨E.deltaObstructionAxioms probe h_nonlocal⟩
 
 /--
-Forme explicite de l'obstruction canonique : pour tout profil `c`,
+Explicit form of the canonical obstruction: for every profile `c`,
 `F c = ∑_b (c.v b) * δ (probe b)`.
 -/
 lemma deltaObstruction_F
@@ -81,7 +81,7 @@ lemma deltaObstruction_F
   (E.deltaObstruction probe h_nonlocal).O.F c =
     ∑ b ∈ (Finset.univ : Finset B),
       (c.v b : ℝ) * E.delta (probe b) := by
-  -- C'est par définition même de `deltaObstructionAxioms.F`.
+  -- This is exactly by definition of `deltaObstructionAxioms.F`.
   rfl
 
 end RefSystem

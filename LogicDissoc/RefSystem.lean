@@ -7,29 +7,29 @@ namespace LogicDissoc
 universe u v
 
 /--
-Système de référence au sens SLE :
+Reference system in the SLE sense:
 
-* `Model`    : type des modèles,
-* `Sentence` : type des formules,
-* `Sat`      : relation de satisfaction,
-* `delta`    : « Δ_ref » à valeurs réelles,
+* `Model`    : type of models,
+* `Sentence` : type of formulas,
+* `Sat`      : satisfaction relation,
+* `delta`    : real-valued “Δ_ref”,
 
-avec les axiomes (DR0), (DR1) et une invariance sémantique.
+with axioms (DR0), (DR1) and semantic invariance.
 -/
 structure RefSystem (Model : Type u) (Sentence : Type v) where
   Sat   : Model → Sentence → Prop
   delta : Sentence → ℝ
-  /-- (DR0) : `delta φ = 0` ssi `φ` appartient à `CloE(∅)`. -/
+  /-- (DR0) : `delta φ = 0` iff `φ` belongs to `CloE(∅)`. -/
   DR0   :
     ∀ φ : Sentence,
       delta φ = 0 ↔
         φ ∈ ThE (Sat := Sat) (ModE (Sat := Sat) (∅ : Set Sentence))
-  /-- (DR1) : si `φ` n'est pas locale, alors `delta φ ∈ [1,2)`. -/
+  /-- (DR1) : if `φ` is non-local, then `delta φ ∈ [1,2)`. -/
   DR1   :
     ∀ {φ : Sentence},
       φ ∉ ThE (Sat := Sat) (ModE (Sat := Sat) (∅ : Set Sentence)) →
         1 ≤ delta φ ∧ delta φ < 2
-  /-- Invariance sémantique : `delta` ne dépend que de la classe de vérité de `φ`. -/
+  /-- Semantic invariance: `delta` depends only on the truth class of `φ`. -/
   delta_semantic_invariance :
     ∀ {φ ψ : Sentence},
       (∀ M : Model, Sat M φ ↔ Sat M ψ) →
@@ -42,19 +42,19 @@ variable (E : RefSystem Model Sentence)
 
 open Set
 
-/-- Clôture `CloE Γ := ThE (ModE Γ)` associée à `E`. -/
+/-- Closure `CloE Γ := ThE (ModE Γ)` associated with `E`. -/
 def CloE (Γ : Set Sentence) : Set Sentence :=
   ThE (Sat := E.Sat) (ModE (Sat := E.Sat) Γ)
 
-/-- Phrases « rang 0 » (locales) : appartenir à `CloE ∅`. -/
+/-- “Rank 0” (local) sentences: membership in `CloE ∅`. -/
 def isLocal (φ : Sentence) : Prop :=
   φ ∈ E.CloE (∅ : Set Sentence)
 
-/-- Phrases « rang 1 » (non locales) : ne pas être dans `CloE ∅`. -/
+/-- “Rank 1” (non-local) sentences: not in `CloE ∅`. -/
 def isNonlocal (φ : Sentence) : Prop :=
   ¬ E.isLocal φ
 
-/-- Réécriture directe de (DR0) via `CloE`. -/
+/-- Direct rewriting of (DR0) via `CloE`. -/
 lemma delta_eq_zero_iff_mem_closure (φ : Sentence) :
   E.delta φ = 0 ↔ φ ∈ E.CloE (∅ : Set Sentence) := by
   -- DR0 : delta φ = 0 ↔ φ ∈ ThE (ModE ∅)
@@ -66,7 +66,7 @@ lemma mem_closure_iff_delta_eq_zero (φ : Sentence) :
   (E.delta_eq_zero_iff_mem_closure φ).symm
 
 /--
-Alignement « rang 1 » au niveau de la clôture :
+“Rank 1” alignment at the level of the closure:
 
 `φ ∉ CloE ∅`  ↔  `delta φ ∈ [1,2)`.
 -/
@@ -74,13 +74,13 @@ lemma nonmem_closure_iff_delta_band (φ : Sentence) :
   φ ∉ E.CloE (∅ : Set Sentence) ↔ 1 ≤ E.delta φ ∧ E.delta φ < 2 := by
   constructor
   · intro hnot
-    -- On réécrit l'hypothèse dans la forme attendue par DR1.
+    -- Rewrite the hypothesis into the form required by DR1.
     have h' :
         φ ∉ ThE (Sat := E.Sat) (ModE (Sat := E.Sat) (∅ : Set Sentence)) := by
       simpa [RefSystem.CloE] using hnot
     exact E.DR1 (φ := φ) h'
   · intro hband hmem
-    -- Si `φ ∈ CloE ∅`, alors `delta φ = 0` par DR0, contradiction avec `1 ≤ delta φ`.
+    -- If `φ ∈ CloE ∅`, then `delta φ = 0` by DR0, contradicting `1 ≤ delta φ`.
     have hδ0 : E.delta φ = 0 :=
       (E.delta_eq_zero_iff_mem_closure φ).mpr hmem
     have h1le0 : (1 : ℝ) ≤ 0 := by
@@ -90,7 +90,7 @@ lemma nonmem_closure_iff_delta_band (φ : Sentence) :
     exact hnot h0lt1
 
 /--
-Alignement « rang 1 » formulé avec `isLocal` / `isNonlocal` :
+“Rank 1” alignment formulated with `isLocal` / `isNonlocal`:
 
 `isNonlocal φ`  ↔  `delta φ ∈ [1,2)`.
 -/

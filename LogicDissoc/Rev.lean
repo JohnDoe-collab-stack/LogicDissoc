@@ -5,10 +5,10 @@ namespace LogicDissoc
 
 /-! ### Traces, Up -/
 
-/-- Une trace temporelle : à chaque instant `n`, une proposition peut valoir. -/
+/-- A temporal trace: at each time `n`, a proposition may hold. -/
 abbrev Trace := ℕ → Prop
 
-/-- Clôture temporelle : `(up T) n` signifie « il y a eu un `k ≤ n` avec `T k`. » -/
+/-- Temporal closure: `(up T) n` means “there exists `k ≤ n` with `T k`”. -/
 def up (T : Trace) : Trace :=
   fun n => ∃ k ≤ n, T k
 
@@ -51,13 +51,13 @@ lemma exists_up_tail_eq (T U : Trace)
     exact ⟨m, hUpTm⟩
 
 
-/-! ### Projecteurs de queue et révision -/
+/-! ### Tail projectors and revision -/
 
 /--
-Projecteur de queue abstrait (à la SLE), agissant sur les traces après `up` :
+Abstract tail projector (in the SLE sense), acting on traces after `up`:
 
-* `Q1` : `pi (up T)` détecte si `T` est vrai à un instant quelconque.
-* `Q2` : invariance de `pi (up T)` par égalité de queue de `up T`.
+* `Q1` : `pi (up T)` detects whether `T` is true at some time.
+* `Q2` : invariance of `pi (up T)` under tail equality of `up T`.
 -/
 structure QueueProjector where
   pi : Trace → Prop
@@ -68,51 +68,51 @@ structure QueueProjector where
         (pi (up T) ↔ pi (up U))
 
 
-/-- Projecteur canonique : `pi S := ∃ n, S n`. -/
+/-- Canonical projector: `pi S := ∃ n, S n`. -/
 def canonicalQueueProjector : QueueProjector where
   pi S := ∃ n : ℕ, S n
   Q1 T := by
-    -- pi (up T) = ∃ n, up T n ↔ ∃ n, T n
+    -- `pi (up T) = ∃ n, up T n` iff `∃ n, T n`
     simpa using exists_up_iff T
   Q2 {T U} hTail := by
-    -- pi (up T) = ∃ n, up T n, idem pour U,
-    -- et `exists_up_tail_eq` donne l'équivalence.
+    -- `pi (up T) = ∃ n, up T n`, similarly for `U`,
+    -- and `exists_up_tail_eq` gives the equivalence.
     simpa using exists_up_tail_eq T U hTail
 
-/-- Opérateur de révision `Rev := pi ∘ up`. -/
+/-- Revision operator `Rev := pi ∘ up`. -/
 def Rev (Q : QueueProjector) (T : Trace) : Prop :=
   Q.pi (up T)
 
-/-- Révision concrète via le projecteur canonique. -/
+/-- Concrete revision via the canonical projector. -/
 def Rev0 (T : Trace) : Prop :=
   Rev canonicalQueueProjector T
 
-/-! ### Lecture locale, provabilité, verdict -/
+/-! ### Local reading, provability, verdict -/
 
 universe u v
 
 /--
-Lecture locale abstraite : à chaque `(Γ, φ)` associe une trace temporelle.
+Abstract local reading: to each pair `(Γ, φ)` it assigns a temporal trace.
 -/
 abbrev LocalReading (Context : Type v) (Sentence : Type u) :=
   Context → Sentence → Trace
 
-/-- Provabilité : il existe un temps où la lecture de `φ` sous `Γ` est vraie. -/
+/-- Provability: there exists a time at which the reading of `φ` under `Γ` holds. -/
 def Prov {Context : Type v} {Sentence : Type u}
     (LR : LocalReading Context Sentence)
     (Γ : Context) (φ : Sentence) : Prop :=
   ∃ n : ℕ, LR Γ φ n
 
-/-- Verdict stabilisé via `Rev0`. -/
+/-- Stabilized verdict via `Rev0`. -/
 def verdict {Context : Type v} {Sentence : Type u}
     (LR : LocalReading Context Sentence)
     (Γ : Context) (φ : Sentence) : Prop :=
   Rev0 (LR Γ φ)
 
 /--
-Équivalence « à la SLE » :
-le verdict stabilisé pour `(Γ, φ)` vaut vrai ssi `φ` est « prouvable » depuis `Γ`
-au sens de la lecture locale `LR`.
+“SLE-style” equivalence:
+the stabilized verdict for `(Γ, φ)` is true iff `φ` is “provable” from `Γ`
+in the sense of the local reading `LR`.
 -/
 lemma verdict_iff_Prov
     {Context : Type v} {Sentence : Type u}
@@ -120,7 +120,7 @@ lemma verdict_iff_Prov
     (Γ : Context) (φ : Sentence) :
   verdict LR Γ φ ↔ Prov LR Γ φ := by
   unfold verdict Rev0 Rev Prov
-  -- but : canonicalQueueProjector.pi (up (LR Γ φ)) ↔ ∃ n, LR Γ φ n
+  -- goal: `canonicalQueueProjector.pi (up (LR Γ φ)) ↔ ∃ n, LR Γ φ n`
   simpa using (canonicalQueueProjector.Q1 (LR Γ φ))
 
 end LogicDissoc

@@ -11,7 +11,7 @@ open Set
 
 variable {Sat}
 
-/-- Décomposition de Σ_R en trois blocs (identifiants ASCII seulement).
+/-- Decomposition of Σ_R into three blocks (ASCII identifiers only).
 -/
 structure SigmaDecomp where
   sigmaAll : Set Sentence
@@ -20,7 +20,7 @@ structure SigmaDecomp where
   sigmaE   : Set Sentence
   hUnion   : sigmaAll = sigmaP ∪ sigmaK ∪ sigmaE
 
-/-- Indicateurs logiques pour Σ_R (ASCII: p, k, e).
+/-- Logical indicators for Σ_R (ASCII: p, k, e).
 -/
 structure Indicators (Sat : Model → Sentence → Prop) (Γ_TD : Set Sentence) (sd : SigmaDecomp) where
   p : ℝ
@@ -36,13 +36,13 @@ structure Indicators (Sat : Model → Sentence → Prop) (Γ_TD : Set Sentence) 
   hk_nonneg : 0 ≤ 1 - k
   he_nonneg : 0 ≤ e
 
-/-- Indice A*(R).
+/-- Index A*(R).
 -/
 def Astar (Sat : Model → Sentence → Prop) (Γ_TD : Set Sentence)
     (sd : SigmaDecomp) (I : Indicators Sat Γ_TD sd) (α β γ : ℝ) : ℝ :=
   α * (1 - I.p) + β * (1 - I.k) + γ * I.e
 
-/-- Somme de deux termes ≥ 0 vaut 0 ⇒ chaque terme = 0. -/
+/-- Sum of two terms ≥ 0 equals 0 ⇒ each term is 0. -/
 lemma two_nonneg_sum_eq_zero_iff
     {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) (h : a + b = 0) :
     a = 0 ∧ b = 0 := by
@@ -58,7 +58,7 @@ lemma two_nonneg_sum_eq_zero_iff
     simpa [add_comm, add_left_comm, add_assoc, sub_eq_add_neg, ha0] using this
   exact And.intro ha0 hb0
 
-/-- Somme de trois termes ≥ 0 vaut 0 ⇒ chaque terme = 0. -/
+/-- Sum of three terms ≥ 0 equals 0 ⇒ each term is 0. -/
 lemma three_nonneg_sum_eq_zero_iff
     {a b c : ℝ}
     (ha : 0 ≤ a) (hb : 0 ≤ b) (hc : 0 ≤ c)
@@ -79,8 +79,7 @@ lemma three_nonneg_sum_eq_zero_iff
     simpa [add_comm, add_left_comm, add_assoc, ha0, hb0, sub_eq_add_neg] using this
   exact And.intro ha0 (And.intro hb0 hc0)
 
-/-- Théorème central : Astar(R) = 0 ⇔ extension conservative.
--/
+/-- Central theorem: Astar(R) = 0 ⇔ conservative extension. -/
 theorem central_theorem
     (Sat : Model → Sentence → Prop)
     (Γ_TD : Set Sentence)
@@ -182,8 +181,7 @@ open Classical
 
 variable (Sat : Model → Sentence → Prop) (Γ_TD : Set Sentence)
 
-/-- Construction d'un témoin `Indicators` canonique pour un `SigmaDecomp` donné.
--/
+/-- Construction of a canonical `Indicators` witness for a given `SigmaDecomp`. -/
 theorem existsIndicators (sd : SigmaDecomp) :
   ∃ _ : Indicators Sat Γ_TD sd, True := by
   classical

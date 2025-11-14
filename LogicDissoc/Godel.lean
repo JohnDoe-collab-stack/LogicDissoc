@@ -12,11 +12,11 @@ universe u v
 
 open Finset
 
-/-- Batteries finies de formules. -/
+/-- Finite batteries of formulas. -/
 abbrev Battery (Sentence : Type*) := Finset Sentence
 
 -- ============================================================================
--- PARTIE 1: MetaGodel
+-- PART 1: MetaGodel
 -- ============================================================================
 
 section MetaGodel
@@ -26,17 +26,17 @@ variable (Sat : Model → Sentence → Prop)
 variable {B : Type*} [Fintype B] [DecidableEq B]
 variable (Γ_ref : Set Sentence)
 
-/-- Extension conservative de `Γ_ref` par une batterie finie `S`. -/
+/-- Conservative extension of `Γ_ref` by a finite battery `S`. -/
 def conservativeExt (S : Battery Sentence) : Prop :=
   ModE Sat (Γ_ref ∪ (↑S : Set Sentence)) = ModE Sat Γ_ref
 
 variable (Count : Battery Sentence → GenCounters B)
 
 /--
-Axiome de correction du protocole de comptage :
+Soundness axiom for the counting protocol:
 
-Le profil nul (toutes composantes à 0) est équivalent
-à la conservativité sémantique de l'extension.
+The zero profile (all components equal to 0) is equivalent to
+semantic conservativity of the extension.
 -/
 class CountSpec : Prop where
   sound :
@@ -46,21 +46,21 @@ class CountSpec : Prop where
 
 variable (L : LegitObstruction B)
 
-/-- Indice général associé à `L` et au protocole `Count`. -/
+/-- General index associated to `L` and the protocol `Count`. -/
 def AstarGen (S : Battery Sentence) : ℝ :=
   L.O.F (Count S)
 
 /--
-Théorème Meta-Gödel (frontière conservative) :
+Meta-Gödel theorem (conservative boundary):
 
-Pour toute batterie finie `S`, sous `CountSpec` :
+For every finite battery `S`, under `CountSpec` we have
 
 `AstarGen L Count S = 0`
 iff
 `ModE(Γ_ref ∪ S) = ModE(Γ_ref)`.
 
-Autrement dit, toute fonctionnelle légitime découpe
-exactement la même frontière conservative / non-conservative.
+In other words, every legitimate functional induces
+exactly the same conservative / non-conservative boundary.
 -/
 theorem metaGodel_frontier_zero
     [CountSpec (Sat := Sat) (Γ_ref := Γ_ref) (Count := Count)]
@@ -75,16 +75,16 @@ theorem metaGodel_frontier_zero
   exact h0.trans h1
 
 /--
-Version "non-zéro" :
+“Non-zero” version:
 
-Sous les mêmes hypothèses,
+Under the same assumptions,
 
 `AstarGen L Count S ≠ 0`
 iff
 `ModE(Γ_ref ∪ S) ≠ ModE(Γ_ref)`.
 
-Le verdict 0 / non-0 est donc invariant par le choix
-de la fonction d'obstruction légitime dans le cône linéaire positif.
+The 0 / non-0 verdict is therefore invariant under the choice
+of the legitimate obstruction functional in the positive linear cone.
 -/
 theorem metaGodel_frontier_nonzero
     [CountSpec (Sat := Sat) (Γ_ref := Γ_ref) (Count := Count)]
@@ -101,15 +101,15 @@ theorem metaGodel_frontier_nonzero
   · intro hnot hEq0
     exact hnot (h.mp hEq0)
 
-/-- `AstarGen` est toujours ≥ 0 pour une obstruction légitime. -/
+/-- `AstarGen` is always ≥ 0 for a legitimate obstruction. -/
 lemma AstarGen_nonneg (S : Battery Sentence) :
   0 ≤ AstarGen (Count := Count) (L := L) S := by
   unfold AstarGen
   exact LegitObstruction.F_nonneg (L := L) (c := Count S)
 
 /--
-Version forte du méta-théorème :
-`AstarGen > 0` ssi l'extension n'est pas conservative.
+Strong version of the meta-theorem:
+`AstarGen > 0` iff the extension is not conservative.
 -/
 theorem metaGodel_frontier_pos
   [CountSpec (Sat := Sat) (Γ_ref := Γ_ref) (Count := Count)]
@@ -135,7 +135,7 @@ theorem metaGodel_frontier_pos
 end MetaGodel
 
 -- ============================================================================
--- PARTIE 2: GodelDynamic
+-- PART 2: GodelDynamic
 -- ============================================================================
 
 /-
@@ -197,7 +197,7 @@ namespace GodelDirection
 Counting protocol induced by a `GodelDirection`.
 
 `CountFromGodel GD S` sets component `b` to 1 iff `dec S b`
-witnesses that there exists a model of `Γ_ref` with property `P b`
+witnesses the existence of a model of `Γ_ref` with property `P b`
 that is eliminated by `Γ_ref ∪ S`. Otherwise it is 0.
 -/
 def CountFromGodel
@@ -225,7 +225,7 @@ by
   constructor
   intro S
   constructor
-  · -- (∀ b, (CountFromGodel GD S).v b = 0) → extension conservative
+  · -- (∀ b, (CountFromGodel GD S).v b = 0) → conservative extension
     intro hZero
     by_contra hNotCons
     obtain ⟨b, m, hm_ref, hm_not, hP⟩ :=
@@ -252,7 +252,7 @@ by
     | isFalse h =>
         -- dec says: no witness, contradiction with hWitness
         exact h hWitness
-  · -- extension conservative → (∀ b, (CountFromGodel GD S).v b = 0)
+  · -- conservative extension → (∀ b, (CountFromGodel GD S).v b = 0)
     intro hCons b
     -- equality of model classes
     have hEq :
@@ -397,7 +397,7 @@ by
 end Incompleteness
 
 -- ============================================================================
--- PARTIE 3: Intégration avec RefSystem / deltaObstruction
+-- PART 3: Integration with RefSystem / deltaObstruction
 -- ============================================================================
 
 section DeltaRefGodel
@@ -408,17 +408,17 @@ variable (Γ_ref : Set Sentence)
 variable {B : Type*} [Fintype B] [DecidableEq B]
 
 /--
-Index de Gödel canonique induit par Δ_ref.
+Canonical Gödel index induced by Δ_ref.
 
-On fixe:
-* un système de référence `E`,
-* une base `Γ_ref`,
-* un type fini de directions `B`,
-* une batterie de tests `probe : B → Sentence` telle que chaque `probe b`
-  est non locale pour `E`.
+We fix:
+* a reference system `E`,
+* a base theory `Γ_ref`,
+* a finite type of directions `B`,
+* a family of tests `probe : B → Sentence` such that each `probe b`
+  is non-local for `E`.
 
-On obtient alors une obstruction légitime canonique
-`E.deltaObstruction probe h_nonlocal`, que l’on branche dans `Astar_Godel`.
+We then obtain a canonical legitimate obstruction
+`E.deltaObstruction probe h_nonlocal`, which we plug into `Astar_Godel`.
 -/
 def Astar_Godel_delta
     (probe : B → Sentence)
@@ -433,14 +433,14 @@ def Astar_Godel_delta
     GD S
 
 /--
-Version spécialisée de `Astar_Godel_pos_iff_nonconservative`
-pour l’obstruction canonique issue de Δ_ref.
+Specialized version of `Astar_Godel_pos_iff_nonconservative`
+for the canonical obstruction coming from Δ_ref.
 
-Pour toute batterie finie `S` et toute direction de Gödel `GD`,
+For every finite battery `S` and Gödel direction `GD` we have:
 
 `0 < Astar_Godel_delta E Γ_ref probe h_nonlocal GD S`
 iff
-`Γ_ref ∪ S` est semantiquement non conservative sur `Γ_ref`.
+`Γ_ref ∪ S` is semantically non-conservative over `Γ_ref`.
 -/
 theorem Astar_Godel_delta_pos_iff_nonconservative
     (probe : B → Sentence)
@@ -452,7 +452,7 @@ theorem Astar_Godel_delta_pos_iff_nonconservative
         (B := B) probe h_nonlocal GD S
     ↔ ¬ conservativeExt (Sat := E.Sat) (Γ_ref := Γ_ref) S :=
 by
-  -- On déroule notre abréviation et on réutilise le théorème général.
+  -- Unfold our abbreviation and reuse the general theorem.
   unfold Astar_Godel_delta
   simpa using
     (Astar_Godel_pos_iff_nonconservative
@@ -483,29 +483,29 @@ variable (Γ_ref : Context)
 open RefSystem
 
 /--
-Vérité dans le référentiel `E` : `φ` est vraie dans tous les modèles
-du système de référence.
+Truth in the reference system `E`: `φ` is true in all models
+of the reference system.
 -/
 def refTruth (φ : Sentence) : Prop :=
   ∀ M : Model, E.Sat M φ
 
 /--
-Le prédicat méta associé à Δ_ref et à la non-provabilité interne
-par rapport à `Γ_ref`.
+Meta-predicate associated with Δ_ref and internal non-provability
+with respect to `Γ_ref`.
 -/
 def DeltaMetaPred (φ : Sentence) : Prop :=
   1 ≤ E.delta φ ∧ ¬ Prov LR Γ_ref φ
 
 /--
-Scénario de point fixe à la Gödel pour Δ_ref (version Thm 8.3 abstraite).
+Gödel-style fixed-point scenario for Δ_ref (abstract Thm 8.3 version).
 
-On encapsule l'existence d'une formule `G` telle que
+We package the existence of a formula `G` such that
 
   `refTruth E G ↔ (1 ≤ δ(G) ∧ ¬ Prov_{Γ_ref}(G))`.
 
-On ne prétend pas ici construire `G` : cette structure est ce que fournit
-une diagonalisation à la Gödel (qui demande une formalisation syntaxique
-complète). On la prend comme donnée / hypothèse structurée.
+We do not attempt to construct `G` here: this structure is exactly what
+a Gödel-style diagonalization provides (which requires a full syntactic
+formalization). We take it as a given / structured hypothesis.
 -/
 structure DeltaRefFixedPoint where
   G     : Sentence
@@ -519,8 +519,9 @@ variable {E LR Γ_ref}
 variable (fp : DeltaRefFixedPoint (E := E) (LR := LR) (Γ_ref := Γ_ref))
 
 /--
-Si `G` satisfait le schéma de point fixe et que la condition méta
-(δ≥1, non-Prov) est réalisée, alors `G` est vraie dans le référentiel E.
+If `G` satisfies the fixed-point scheme and the meta condition
+(δ≥1, non-provability) holds, then `G` is true in the reference
+system `E`.
 -/
 lemma truth_of_meta :
   DeltaMetaPred (E := E) (LR := LR) Γ_ref fp.G →
@@ -528,8 +529,8 @@ lemma truth_of_meta :
 (fp.fixed).mpr
 
 /--
-Réciproque : si `G` est vraie dans le référentiel E, alors elle satisfait
-la condition méta (δ≥1, non-Prov).
+Conversely: if `G` is true in the reference system `E`, then it satisfies
+the meta condition (δ≥1, non-provability).
 -/
 lemma meta_of_truth :
   refTruth (E := E) fp.G →
@@ -537,8 +538,8 @@ lemma meta_of_truth :
 (fp.fixed).mp
 
 /--
-En particulier, si `G` est vraie dans E, alors `G` n'est pas prouvable
-depuis `Γ_ref` au sens de la lecture locale `LR`.
+In particular, if `G` is true in `E`, then `G` is not provable
+from `Γ_ref` in the sense of the local reading `LR`.
 -/
 lemma notProv_of_truth :
   refTruth (E := E) fp.G → ¬ Prov LR Γ_ref fp.G := by
@@ -547,8 +548,8 @@ lemma notProv_of_truth :
   exact h.right
 
 /--
-Toujours sous la vérité de `G` dans E, on obtient `δ(G) ≥ 1` : `G`
-est nécessairement non locale (au sens Δ_ref).
+Still assuming `G` is true in `E`, we obtain `δ(G) ≥ 1`: `G` is
+necessarily non-local (in the Δ_ref sense).
 -/
 lemma delta_ge_one_of_truth :
   refTruth (E := E) fp.G → 1 ≤ E.delta fp.G := by

@@ -5,13 +5,12 @@ universe u v
 variable {Sentence : Type u} {Model : Type v}
 variable (Sat : Model → Sentence → Prop)
 
-/-- Classe des modèles de Γ.
--/
+/-- Class of models of Γ. -/
 def ModE (Γ : Set Sentence) : Set Model :=
   { M |
 ∀ φ ∈ Γ, Sat M φ }
 
-/-- Théorie vraie dans tous les modèles de K. -/
+/-- Theory true in all models of `K`. -/
 def ThE (K : Set Model) : Set Sentence :=
   { φ |
 ∀ M ∈ K, Sat M φ }
@@ -22,8 +21,7 @@ open Set
 
 variable {Sat}
 
-/-- Lemme Galois : extension conservative.
--/
+/-- Galois lemma: conservative extension. -/
 lemma mod_conservative_iff_subset_ThE
     (Γ Δ : Set Sentence) :
     ModE Sat (Γ ∪ Δ) = ModE Sat Γ ↔ Δ ⊆ ThE Sat (ModE Sat Γ) := by
@@ -44,8 +42,7 @@ lemma mod_conservative_iff_subset_ThE
           have hφIn : φ ∈ ThE Sat (ModE Sat Γ) := h_sub hφΔ
           exact hφIn M hM
 
-/-- Classe K = ModE(Γ_TD).
--/
+/-- Class `K = ModE(Γ_TD)`. -/
 def K (Sat : Model → Sentence → Prop) (Γ_TD : Set Sentence) : Set Model :=
   ModE Sat Γ_TD
 
