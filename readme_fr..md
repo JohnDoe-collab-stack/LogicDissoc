@@ -76,7 +76,7 @@ Dans la bibliothèque, un tel système de référence est représenté par :
 (Sentence, Model, Sat, Γ_ref)
 ```
 
-* `Γ_ref` n’est pas “toute les mathématiques”, mais un **référentiel local**.
+* `Γ_ref` n’est pas “toutes les mathématiques”, mais un **référentiel local**.
 * Les paquets finis `S` de phrases sont des **extensions** de ce référentiel.
 
 La question centrale devient :
@@ -183,7 +183,7 @@ On obtient un **cône positif** de formes linéaires sur `ℕ^B` :
 Un **protocole de comptage** pour le cadre est une application :
 
 ```text
-Count : { S finits ⊆ Sentence } → (B → ℕ).
+Count : { S finis ⊆ Sentence } → (B → ℕ).
 ```
 
 Il est **admissible** (classe `CountSpec`) si :
@@ -452,7 +452,7 @@ Sur ce système concret, on prouve (par construction, pas par axiome) :
   delta φ = 0   ⇔   φ ∈ CloE ∅.
   ```
 
-* `nonmem_closure_iff_delta_band` :
+* un lemme de bande pour les non-membres de la clôture, du type :
 
   ```text
   φ ∉ CloE ∅   ⇔   1 ≤ delta φ ∧ delta φ < 2.
@@ -474,7 +474,7 @@ et on prouve :
 
 * `delta = 0` caractérise **exactement** les phrases locales,
 * la bande `[1,2)` caractérise les phrases non locales contrôlées,
-* et tout ceci est **concretement** exhibé en Lean.
+* et tout ceci est **concrètement** exhibé en Lean.
 
 ---
 
@@ -509,7 +509,7 @@ def isNonlocal (E : RefSystem Model Sentence) (φ : Sentence) :=
   ¬ isLocal E φ
 ```
 
-Et l’on prouve :
+Et l’on prouve dans `Rank.lean` :
 
 * `isLocal_iff_delta_zero` :
 
@@ -609,8 +609,9 @@ Le rang est ensuite appliqué à des **familles de phrases** qui codent des obje
 
 Formes typiques :
 
-* `Cut : ℚ → Code → Sentence`  (coupes),
-* `Bit : ℕ → ℕ → Code → Sentence` (bits).
+* `Code` : type de codes numériques,
+* `Cut : ℚ → Code → Sentence`  (coupes rationnelles),
+* `Bit : ℕ → ℕ → Code → Sentence` (bits dyadiques).
 
 On définit :
 
@@ -636,11 +637,99 @@ Ce sont :
 
 * des notions purement **dérivées**,
 * bâties sur `RefSystem`, `delta`, `obstructionRank`,
-* et les lemmes déjà prouvés.
+* et les lemmes déjà prouvés dans `Rank.lean`.
+
+On peut ainsi exprimer, pour un code `x : Code`, des propriétés du type :
+
+* “toutes les coupes rationnelles de `x` sont locales” (`codeIsCutLocal`),
+* “`x` possède au moins un bit dyadique de rang transcend” (`codeHasTranscendentBits`).
+
+On s’intéressera en particulier, dans `LogicDissoc/Omega.lean` (cf. §15), à des
+codes `x` dont **toutes** les coupes sont de rang `ilm` et **tous** les bits
+dyadiques sont de rang `transcend`.
 
 ---
 
-### 15. Étape 6 – Synthèse de la couche interne
+### 15. Codes de type Ω (Omega.lean)
+
+Les définitions de `cutRank` et `bitRank` permettent de classer *tout* code
+`x : Code` en termes d’obstruction (local, `ilm`, transcend). Pour capturer
+abstractionnellement un code de type Ω de Chaitin, on n’ajoute pas de constante
+globale `Omega : Code` ni d’axiomes dans `Rank.lean`.
+
+À la place, le fichier
+
+```text
+LogicDissoc/Omega.lean
+```
+
+introduit une spécification paramétrée :
+
+```lean
+namespace LogicDissoc.Omega
+
+structure Spec
+    {Model Sentence Code : Type _}
+    (E   : RefSystem Model Sentence)
+    (Cut : ℚ → Code → Sentence)
+    (Bit : ℕ → ℕ → Code → Sentence)
+    (x   : Code) : Prop :=
+  (cuts_are_ilm :
+     ∀ q : ℚ,
+       E.delta (Cut q x) ≠ 0 ∧ E.delta (Cut q x) = 1)
+  (bits_are_transcend :
+     ∀ n a : ℕ,
+       E.delta (Bit n a x) ≠ 0 ∧ E.delta (Bit n a x) ≠ 1)
+```
+
+Autrement dit, `Spec E Cut Bit x` dit que le code `x` est obstructionnellement
+de type Ω :
+
+* toutes ses coupes rationnelles `Cut q x` sont de rang `ilm`,
+* tous ses bits dyadiques `Bit n a x` sont de rang `transcend`,
+
+au sens de `ObstructionRank` défini dans `Rank.lean`.
+
+À partir de cette spécification, on démontre dans `Omega.lean` que, pour tout
+`x` et toute preuve `hΩ : Spec E Cut Bit x`, on a :
+
+```lean
+open LogicDissoc.Omega
+
+lemma omega_cutRank_is_ilm
+    (hΩ : Spec E Cut Bit x)
+    [∀ q, Decidable (E.delta (Cut q x) = 0)]
+    [∀ q, Decidable (E.delta (Cut q x) = 1)] :
+  ∀ q : ℚ,
+    cutRank E Cut x q = ObstructionRank.ilm
+
+lemma omega_bitRank_is_transcend
+    (hΩ : Spec E Cut Bit x)
+    [∀ n a, Decidable (E.delta (Bit n a x) = 0)]
+    [∀ n a, Decidable (E.delta (Bit n a x) = 1)] :
+  ∀ n a : ℕ,
+    bitRank E Bit x n a = ObstructionRank.transcend
+```
+
+Ces lemmes ne font qu’exploiter la structure de `Spec` et les lemmes généraux
+de `Rank.lean` (`obstructionRank_ilm_of_delta_eq_one`,
+`obstructionRank_transcend_of_delta_ne`). Ils n’ajoutent aucun axiome : `Spec`
+est une propriété purement propositionnelle d’un code `x`, exprimée dans le
+langage de `RefSystem`.
+
+Le fichier `Rank.lean` reste ainsi purement général (il ne parle pas d’Ω) ;
+toute la logique “de type Chaitin” est isolée dans `Omega.lean`, au niveau
+`Prop`, sans `noncomputable` ni constantes globales supplémentaires.
+
+La future connexion avec le **halting** (via `Rev.lean`) consistera à exhiber,
+dans un troisième temps, des codes concrets `x` satisfaisant `Spec E Cut Bit x`
+à partir d’une construction de type Ω de Chaitin. Cette étape se fera dans un
+fichier séparé (par exemple `OmegaViaHalting.lean`), en réutilisant la théorie
+du halting abstrait développée dans `Rev.lean`.
+
+---
+
+### 16. Étape 6 – Synthèse de la couche interne
 
 En synthèse :
 
@@ -649,16 +738,18 @@ En synthèse :
 3. On prouve une **trichotomie** pour `delta`.
 4. On définit un type fini `ObstructionRank` qui recode cette trichotomie.
 5. On introduit des définitions basées sur le rang pour des familles de phrases (coupes, bits, etc.), uniquement à partir de ces briques.
+6. Éventuellement, on isole des spécifications plus fines comme `Omega.Spec` pour décrire des codes de type Ω, sans modifier `Rank.lean` ni ajouter d’axiomes.
 
 Conclusion :
 
 * le rang d’obstruction est **démontré**, non postulé,
 * il est dérivé de `delta` au sein de `RefSystem`,
-* et `RefSystem` lui-même est justifié par une **construction explicite** en amont.
+* `RefSystem` lui-même est justifié par une **construction explicite** en amont,
+* les constructions de type Ω sont formulées comme des propriétés (`Spec`) au-dessus de cette couche, et non comme des constantes globales non calculables.
 
 ---
 
-## 16. Licence
+## 17. Licence
 
 Ce projet est distribué sous la licence **GNU Affero General Public License version 3.0 only (AGPL-3.0-only)**.
 

@@ -16,3 +16,4 @@ import LogicDissoc.GlobalRigidity
 import LogicDissoc.LocalRigidity
 import LogicDissoc.GraphToy
 import LogicDissoc.Rank
+import LogicDissoc.Omega

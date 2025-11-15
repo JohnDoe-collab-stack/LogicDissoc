@@ -1,23 +1,27 @@
-# LogicDissoc: Semantic Obstruction and Quantified Incompleteness
-
-This document explains the conceptual architecture of **LogicDissoc**:
-
-1. A general Gödel-style **obstruction index** `A*_Godel` that measures how much a finite extension `S` of a reference theory `Γ_ref` deforms its class of models.
-2. An internal **non-locality measure** `delta` packaged in a `RefSystem`, and a derived finite **obstruction rank** `ObstructionRank` that discretizes the behaviour of `delta`.
-
-The goal is to help a reader understand *what is going on and why*, not to give an API or installation guide.
+Here is the English version.
 
 ---
 
-## 0. High-level picture
+# LogicDissoc: Semantic obstruction and quantified incompleteness
+
+This document explains the conceptual architecture of **LogicDissoc**:
+
+1. A **Gödel obstruction index** `A*_Godel` which measures how much a finite extension `S` of a reference theory `Γ_ref` deforms its class of models.
+2. A **measure of semantic non-locality** `delta` encapsulated in a `RefSystem`, and a finite **obstruction rank** `ObstructionRank` which discretizes the behavior of `delta`.
+
+The goal is to help the reader understand *what is going on and why*, not to provide an API or installation guide.
+
+---
+
+## 0. Overview
 
 We fix a **reference system**:
 
 ```text
 (Sentence, Model, Sat, Γ_ref)
-````
+```
 
-and look at finite extensions `Γ_ref ∪ S`. The core semantic notion is:
+and look at finite extensions `Γ_ref ∪ S`. The central semantic notion is:
 
 * The extension is **conservative** if it does not change the class of admissible models:
 
@@ -25,7 +29,7 @@ and look at finite extensions `Γ_ref ∪ S`. The core semantic notion is:
   ModE(Γ_ref ∪ S) = ModE(Γ_ref).
   ```
 
-The library attaches to each finite batch `S` a real number
+The library associates to each finite package `S` a real number
 
 ```text
 A*_Godel(S) ∈ ℝ
@@ -34,13 +38,13 @@ A*_Godel(S) ∈ ℝ
 such that:
 
 ```text
-A*_Godel(S) = 0   ⇔   Γ_ref ∪ S is conservative
-A*_Godel(S) > 0   ⇔   Γ_ref ∪ S is non-conservative.
+A*_Godel(S) = 0   ⇔   Γ_ref ∪ S is a conservative extension
+A*_Godel(S) > 0   ⇔   Γ_ref ∪ S is semantically non-conservative.
 ```
 
-Moreover, the 0 / >0 verdict does **not** depend on the choice of a certain linear functional; only the numerical scale changes.
+Moreover, the cut `0 / >0` does **not** depend on the choice of a certain linear functional; only the numerical scale changes.
 
-Internally, for some frameworks, this obstruction is refined further via a semantic measure
+Internally, for certain frameworks, this obstruction is refined via a semantic measure
 
 ```text
 delta : Sentence → ℝ
@@ -55,20 +59,20 @@ inductive ObstructionRank
 | transcend  -- delta ≠ 0, 1
 ```
 
-which re-encodes the behaviour of `delta` and is then used to classify numerical codes (e.g. cuts and bits).
+which re-encodes the behavior of `delta` and is then used to classify numerical codes (cuts, bits, etc.).
 
 ---
 
 ## 1. Foundational viewpoint: reference systems, not absolute foundations
 
-LogicDissoc starts from a simple stance:
+LogicDissoc starts from a simple observation:
 
-* There is no global, all-encompassing “final” theory where everything is decided.
-* In practice, we always reason **relative to a reference system**:
+* There is no global final theory in which everything is decided.
+* In practice, one always reasons **relative to a reference system**:
 
-  * a background theory (PA, ZFC, a type theory, a piece of QFT, …),
+  * a background theory (PA, ZFC, a type system, a fragment of QFT, …),
   * a class of admissible models,
-  * and an internal notion of truth.
+  * a notion of internal truth.
 
 In the library, such a reference system is represented by:
 
@@ -76,23 +80,23 @@ In the library, such a reference system is represented by:
 (Sentence, Model, Sat, Γ_ref)
 ```
 
-* `Γ_ref` is not “all of mathematics”, but a **local reference frame**.
-* Finite batches `S` of sentences are **extensions** of this frame.
+* `Γ_ref` is not “all of mathematics”, but a **local frame of reference**.
+* Finite bundles `S` of sentences are **extensions** of this frame.
 
-The central question is:
+The central question becomes:
 
-> What happens semantically to `ModE(Γ_ref)` when we pass to `ModE(Γ_ref ∪ S)`?
+> What happens to `ModE(Γ_ref)` when we pass to `ModE(Γ_ref ∪ S)`?
 
-From this point of view:
+In this setting:
 
-* **Incompleteness is normal**: as soon as `S` really changes the reference system, the extension is non-conservative.
-* The index `A*_Godel` is not there to fix incompleteness, but to **measure the obstruction** to conservativity.
+* **Incompleteness is normal**: as soon as `S` really changes the reference system, the extension is no longer conservative.
+* The index `A*_Godel` is not meant to fix incompleteness, but to **measure the obstruction** to conservativity.
 
 ---
 
-## Part I – The Gödel-style obstruction index
+## First part – The Gödel obstruction index
 
-This part describes the abstract mechanism that builds `A*_Godel`.
+This part describes the abstract mechanism which constructs `A*_Godel`.
 
 ### 2. Basic semantic framework
 
@@ -109,35 +113,35 @@ For `Γ ⊆ Sentence`, define:
 ModE(Γ) := { M : Model | ∀ φ ∈ Γ, Sat M φ }.
 ```
 
-For a finite `S ⊆ Sentence` (code: `Battery Sentence = Finset Sentence`), the extension is **conservative** if:
+For finite `S ⊆ Sentence` (code: `Battery Sentence = Finset Sentence`), the extension is **conservative** if:
 
 ```text
 ModE(Γ_ref ∪ S) = ModE(Γ_ref).
 ```
 
-This is written:
+We denote this property by:
 
 ```text
 Cons_S(S) :⇔ ModE(Γ_ref ∪ S) = ModE(Γ_ref).
 ```
 
-All later constructions refer only to `ModE` and `Cons_S`.
+All subsequent constructions depend only on `ModE` and `Cons_S`.
 
 ---
 
 ### 3. Cone of legitimate obstructions (geometric layer)
 
-Fix a finite set `B` of obstruction types.
+Fix a finite set `B` of **obstruction types**.
 
-**Counters.** A counter profile is:
+**Counter profiles.** A profile is a function
 
 ```text
 c : B → ℕ
 ```
 
-i.e. `c ∈ ℕ^B` (code: `GenCounters B`).
+that is, an element of `ℕ^B` (code: `GenCounters B`).
 
-**Legitimate obstructions.** A legitimate obstruction on `B` is a map:
+**Legitimate obstructions.** A legitimate obstruction on `B` is a map
 
 ```text
 F : (B → ℕ) → ℝ
@@ -145,7 +149,7 @@ F : (B → ℕ) → ℝ
 
 such that (as in `ObstructionGen` and `Legit`):
 
-1. **Linearity over ℕ.** There exist `α_b > 0` with
+1. **Linearity over ℕ.** There exist coefficients `α_b > 0` such that
 
    ```text
    F(c) = ∑_{b ∈ B} α_b · c(b).
@@ -171,10 +175,10 @@ LegitObstruction B
 
 with functional `L.O.F`.
 
-This gives a **positive cone** of linear forms on `ℕ^B`:
+We obtain a **positive cone** of linear forms on `ℕ^B`:
 
-* changing `L` is a renormalization,
-* it does **not** change the geometry of the 0 / >0 frontier.
+* changing `L` renormalizes the index,
+* without changing the geometry of the boundary `0 / >0`.
 
 ---
 
@@ -192,17 +196,17 @@ It is **admissible** (class `CountSpec`) if:
 ∀ S, (∀ b, Count(S)(b) = 0)   ⇔   Cons_S(S).
 ```
 
-In words:
+In other words:
 
-* The **zero profile** (all coordinates 0) is equivalent to **semantic conservativity**.
+* the **zero profile** (all coefficients zero) is equivalent to **semantic conservativity**.
 
 Given:
 
 * a semantic framework `S`,
 * a legitimate obstruction `L`,
-* an admissible `Count`,
+* an admissible protocol `Count`,
 
-define the general index:
+we define the general index:
 
 ```text
 A*_{S,L,Count}(S) := F(Count(S)) ∈ ℝ,
@@ -221,9 +225,9 @@ AstarGen (Sat := Sat) (Γ_ref := Γ_ref)
 
 ### 5. Gödel directions (dynamic layer)
 
-We now encode **where** non-conservativity happens using Gödel directions.
+We now encode **where** non-conservativity appears via Gödel directions.
 
-A **Gödel direction** for framework `S` and alphabet `B` is a predicate:
+A **Gödel direction** for the framework `S` and alphabet `B` is a predicate
 
 ```text
 P : B → Model → Prop
@@ -231,7 +235,7 @@ P : B → Model → Prop
 
 such that:
 
-1. **Local decidability.** For all finite `S` and all `b ∈ B`, the statement
+1. **Local decidability.** For every finite `S` and every `b ∈ B`, the statement
 
    ```text
    ∃ m,
@@ -254,22 +258,22 @@ such that:
 
    (Field `separating`.)
 
-So Gödel directions are **semantic channels** along which model loss must show up.
+Gödel directions are therefore **semantic channels** along which model loss must show up.
 
-From `P`, define the **canonical Gödel counting**:
+From `P`, we define the canonical **Gödel counting**:
 
 ```text
 Count^Godel(S)(b) :=
   1 if ∃ m,
        m ∈ ModE(Γ_ref),
        m ∉ ModE(Γ_ref ∪ S),
-       P b m;
+       P b m ;
   0 otherwise.
 ```
 
 In Lean: `GodelDirection.CountFromGodel`.
 
-**Admissibility.** One proves:
+**Admissibility.** One shows that
 
 ```text
 Count^Godel : Battery Sentence → (B → ℕ)
@@ -281,9 +285,9 @@ satisfies:
 ∀ S, (∀ b, Count^Godel(S)(b) = 0)   ⇔   Cons_S(S),
 ```
 
-i.e. `Count^Godel` is an admissible counting protocol (instance `CountSpec`).
+so `Count^Godel` is an admissible protocol (instance `CountSpec`).
 
-Given a legitimate obstruction `L` and Gödel direction `P`, the **Gödel index** is:
+Given a legitimate obstruction `L` and a Gödel direction `P`, we define the **Gödel index**:
 
 ```text
 A*_Godel(S) := F(Count^Godel(S)).
@@ -310,7 +314,7 @@ then for every finite `S`:
    A*_Godel(S) = 0   ⇔   Cons_S(S).
    ```
 
-2. **Positive boundary**
+2. **Strictly positive boundary**
 
    ```text
    A*_Godel(S) > 0   ⇔   ¬Cons_S(S).
@@ -318,63 +322,59 @@ then for every finite `S`:
 
 3. **Independence of `L`**
 
-   For any two legitimate obstructions `L1`, `L2`:
+   For two legitimate obstructions `L1`, `L2`:
 
    ```text
    A*_{Godel}(S; L1) = 0  ⇔  A*_{Godel}(S; L2) = 0
    A*_{Godel}(S; L1) > 0 ⇔  A*_{Godel}(S; L2) > 0
    ```
 
-So:
+Thus:
 
-* The qualitative verdict “0 vs >0” is **independent** of the choice of `L` in the cone.
-* Only the numerical scale changes.
+* the qualitative verdict “0 vs >0” is **independent** of the choice of `L` in the cone,
+* only the numerical scale changes.
 
-In Lean this corresponds to:
-
-* `metaGodel_frontier_zero`,
-* `metaGodel_frontier_pos`,
-* and lemmas on `LegitObstruction` (`linear_repr`, `zero_iff_all_zero`, `F_nonneg`).
+In Lean: `metaGodel_frontier_zero`, `metaGodel_frontier_pos`, and lemmas on `LegitObstruction` (`linear_repr`, `zero_iff_all_zero`, `F_nonneg`).
 
 ---
 
-### 7. Conceptual hierarchy (summary of Part I)
+### 7. Conceptual hierarchy (summary of the first part)
 
 The abstract mechanism has four layers:
 
 1. **Level 0 – Model theory.**
    `ModE`, `Cons_S` for a framework `S`.
 
-2. **Level 1 – Obstruction cone.**
-   Positive linear functionals `L : (B → ℕ) → ℝ` with trivial kernel.
+2. **Level 1 – Cone of obstructions.**
+   Positive linear forms `L : (B → ℕ) → ℝ` with trivial kernel.
 
 3. **Level 2 – Gödel directions.**
-   `P : B → Model → Prop` with decidability and separation, giving canonical `Count^Godel`.
+   `P : B → Model → Prop` with decidability and separation, yielding `Count^Godel`.
 
-4. **Level 3 – A* index.**
+4. **Level 3 – Index A*.**
    For each `(S,B,P,L)`, the index
 
    ```text
    S ↦ A*_Godel(S)
    ```
 
-   detects exactly the conservative extensions (`=0`) and non-conservative ones (`>0`), and provides a numerical measure of obstruction strength.
+   detects exactly the conservative extensions (`=0`) and non-conservative ones (`>0`), and provides a numerical measure of the obstruction’s intensity.
 
 ---
 
-### 8. Finite example: graphs with non-trivial δ (`GraphToy`)
+### 8. Finite example: graphs and nontrivial δ (`GraphToy`)
 
-The file:
+The file
 
 ```text
 LogicDissoc/GraphToy.lean
 ```
 
-implements a fully explicit finite instance:
+provides an explicit finite instance:
 
 * `Model  := Graph3` (undirected graphs on 3 labeled vertices),
 
-* `Sentence := GraphSentence` with atoms like `conn`, `tri`, `¬conn`, `¬tri`,
+* `Sentence := GraphSentence` with atoms `conn`, `tri`, `¬conn`, `¬tri`,
 
 * a concrete `RefSystem`:
 
@@ -384,9 +384,9 @@ implements a fully explicit finite instance:
 
   with `delta : Sentence → ℝ` such that:
 
-  * `delta(top) = 0` for the unique everywhere-true local sentence,
+  * `delta(top) = 0` for the unique local sentence that is true in every model,
   * for every non-local sentence `φ`, `1 ≤ delta φ < 2`,
-  * distinct non-local formulas (e.g. `conn`, `¬conn`, `tri`, `¬tri`) get distinct real values.
+  * distinct non-local formulas (`conn`, `¬conn`, `tri`, `¬tri`) have distinct real values.
 
 * a finite type of Gödel directions `GraphDir` with `GraphGodelDirection`,
 
@@ -402,12 +402,12 @@ implements a fully explicit finite instance:
 
 * the **local / non-local** dichotomy via `delta`,
 * the **granularity** of `delta` on non-local formulas,
-* detection of non-conservativity via Gödel directions,
-* the 0 / >0 meta-theorem in a finite, fully proved Lean setting.
+* the detection of non-conservativity via Gödel directions,
+* the 0 / >0 meta-theorem in a finite framework fully proved in Lean.
 
 ---
 
-## Part II – Internal justification of `RefSystem` and obstruction rank
+## Second part – Internal justification of `RefSystem` and the obstruction rank
 
 This part explains how the internal layer
 
@@ -415,26 +415,26 @@ This part explains how the internal layer
 * `delta : Sentence → ℝ`,
 * `ObstructionRank`
 
-is *constructed* and why it introduces no extra axioms.
+is *constructed* and why it does not introduce new axioms.
 
 ### 9. Guiding idea
 
 The main idea is:
 
-1. Start from a **concrete system** with models, sentences, satisfaction, closure, and a function `delta`.
+1. First construct a **concrete system** (models, sentences, satisfaction, closure, `delta`).
 2. Prove in this concrete system the key properties of `delta` (locality, non-locality, band `[1,2)`, etc.).
 3. Abstract these data into a generic structure `RefSystem`.
-4. From there, define a finite type `ObstructionRank` that only **recodes** information already contained in `delta`.
+4. From there, define a finite rank type (`ObstructionRank`) which merely **re-encodes** the information already contained in `delta`.
 
 Nothing is postulated for free:
 
-* the rank is not assumed; it is *derived* from a trichotomy of `delta`.
+* the rank is not assumed; it is derived from a trichotomy of `delta`.
 
 ---
 
 ### 10. Step 1 – Concrete construction of `delta`
 
-In a concrete file (e.g. `DeltaConstruction.lean` / `BasicSemantics.lean`), we have:
+In a concrete file (`DeltaConstruction.lean` / `BasicSemantics.lean`), we have:
 
 * a type `Model`,
 * a type `Sentence`,
@@ -446,9 +446,9 @@ In a concrete file (e.g. `DeltaConstruction.lean` / `BasicSemantics.lean`), we h
   delta : Sentence → ℝ
   ```
 
-  constructed explicitly (e.g. on a finite universe, or from a canonical measure).
+  constructed explicitly (for example on a finite universe, or from a canonical measure).
 
-On this concrete system, one proves (by construction, not by axiom):
+On this concrete system, we prove (by construction, not as axioms):
 
 * `delta_eq_zero_iff_mem_closure`:
 
@@ -456,35 +456,35 @@ On this concrete system, one proves (by construction, not by axiom):
   delta φ = 0   ⇔   φ ∈ CloE ∅.
   ```
 
-* `nonmem_closure_iff_delta_band`:
+* a band lemma for non-members of the closure, of the form:
 
   ```text
   φ ∉ CloE ∅   ⇔   1 ≤ delta φ ∧ delta φ < 2.
   ```
 
-Define:
+We then define:
 
 ```lean
 isLocal    φ := φ ∈ CloE ∅
 isNonlocal φ := ¬ isLocal φ
 ```
 
-Then prove:
+and prove:
 
 * `isLocal φ     ⇔ delta φ = 0`,
 * `isNonlocal φ  ⇔ 1 ≤ delta φ ∧ delta φ < 2`.
 
 At this stage:
 
-* `delta = 0` **exactly** characterizes local sentences,
-* the band `[1,2)` characterizes controlled non-local sentences,
-* and this entire package is fully **concrete** and exhibited in Lean.
+* `delta = 0` characterizes **exactly** the local sentences,
+* the band `[1,2)` characterizes the controlled non-local sentences,
+* and all this is **explicitly** exhibited in Lean.
 
 ---
 
-### 11. Step 2 – Abstraction as `RefSystem`
+### 11. Step 2 – Abstraction into `RefSystem`
 
-Once the concrete construction is in place, we abstract it into:
+Once the concrete construction is established, we abstract it as:
 
 ```lean
 structure RefSystem (Model Sentence : Type _) :=
@@ -500,10 +500,10 @@ structure RefSystem (Model Sentence : Type _) :=
 
 Here:
 
-* `delta_eq_zero_iff_mem_closure` and `nonlocal_iff_delta_band` are **theorems** from Step 1, now recorded as fields.
-* `RefSystem` is **known to be inhabited** (non-empty) because of the explicit concrete construction.
+* `delta_eq_zero_iff_mem_closure` and `nonlocal_iff_delta_band` are **theorems** from Step 1, now stored as fields.
+* We know that `RefSystem` is **inhabited** thanks to the explicit construction.
 
-At the abstract level, define:
+At the abstract level, we define:
 
 ```lean
 def isLocal    (E : RefSystem Model Sentence) (φ : Sentence) :=
@@ -513,7 +513,7 @@ def isNonlocal (E : RefSystem Model Sentence) (φ : Sentence) :=
   ¬ isLocal E φ
 ```
 
-Using the structure fields, prove:
+And we prove in `Rank.lean`:
 
 * `isLocal_iff_delta_zero`:
 
@@ -527,42 +527,42 @@ Using the structure fields, prove:
   E.isNonlocal φ   ⇔   1 ≤ E.delta φ ∧ E.delta φ < 2.
   ```
 
-So `RefSystem` is not a bag of axioms; it is an abstraction of an explicitly constructed instance.
+So `RefSystem` is not a bundle of axioms, but the abstraction of an explicitly constructed instance.
 
 ---
 
 ### 12. Step 3 – Trichotomy of `delta` (justifying the rank)
 
-From any `RefSystem E`, we already know:
+For any `RefSystem E`, we already know:
 
-* `φ` local ⇒ `E.delta φ = 0`,
-* `φ` non-local ⇒ `1 ≤ E.delta φ < 2`.
+* local `φ` ⇒ `E.delta φ = 0`,
+* non-local `φ` ⇒ `1 ≤ E.delta φ < 2`.
 
-We now refine this using classical logic (LEM) for reals:
+We then refine the non-local case using classical logic (LEM) for reals:
 
 * either `E.delta φ = 1`,
 * or `E.delta φ ≠ 1`.
 
-Combining both, we prove a lemma `delta_trichotomy`:
+Combining these cases, we obtain a lemma `delta_trichotomy`:
 
-> For every sentence `φ`, exactly one of the three cases holds:
+> For every sentence `φ`, exactly one of the following three cases holds:
 >
 > 1. `E.delta φ = 0`
 > 2. `E.delta φ = 1`
 > 3. `E.delta φ ≠ 0` and `E.delta φ ≠ 1`.
 
-This is a **pure theorem** based on:
+This is a **pure theorem**, based on:
 
-* the concrete properties of `delta` encoded in `RefSystem`,
+* the concrete properties of `delta` encapsulated in `RefSystem`,
 * classical logic in Lean.
 
-We are not postulating a rank here; we are proving a **three-way decomposition** of the real value `E.delta φ`.
+We do not postulate any rank here; we prove a three-way decomposition of `E.delta φ`.
 
 ---
 
 ### 13. Step 4 – Definition of `ObstructionRank` (TriRank)
 
-Given the trichotomy, it is natural to define a finite type:
+Given the trichotomy, we introduce the finite type:
 
 ```lean
 inductive ObstructionRank
@@ -572,7 +572,7 @@ inductive ObstructionRank
 deriving DecidableEq
 ```
 
-Define the rank function:
+Then the rank function:
 
 ```lean
 def obstructionRank (E : RefSystem Model Sentence) (φ : Sentence)
@@ -586,7 +586,7 @@ def obstructionRank (E : RefSystem Model Sentence) (φ : Sentence)
     ObstructionRank.transcend
 ```
 
-Then prove the specification lemma:
+And the specification lemma:
 
 ```lean
 lemma obstructionRank_spec
@@ -598,25 +598,26 @@ lemma obstructionRank_spec
       ∧ E.delta φ ≠ 0 ∧ E.delta φ ≠ 1)
 ```
 
-This states precisely:
+This lemma says exactly that:
 
-* `obstructionRank E φ` introduces **no new information** beyond `E.delta φ`,
-* it simply classifies `E.delta φ` into the three cases given by `delta_trichotomy`.
+* `obstructionRank E φ` adds **no new information** to `E.delta φ`,
+* it simply **classifies** the value of `delta` according to the trichotomy.
 
-So the obstruction rank is a **discrete summary** of the continuous invariant `delta`.
+The obstruction rank is therefore a **discrete summary** of the continuous invariant `delta`.
 
 ---
 
 ### 14. Step 5 – Classification of numerical codes
 
-The rank is then used to classify **families of sentences** that encode numerical objects.
+The rank is then applied to **families of sentences** that code numerical objects.
 
-Typical shapes:
+Typical forms:
 
-* `Cut : ℚ → Code → Sentence`  (cuts),
-* `Bit : ℕ → ℕ → Code → Sentence`  (bits).
+* `Code` : type of numerical codes,
+* `Cut : ℚ → Code → Sentence`  (rational cuts),
+* `Bit : ℕ → ℕ → Code → Sentence` (dyadic bits).
 
-Define:
+We define:
 
 ```lean
 cutRank E Cut x q :=
@@ -640,33 +641,120 @@ These are:
 
 * purely **derived** notions,
 * built on `RefSystem`, `delta`, `obstructionRank`,
-* and the previously established lemmas.
+* and the lemmas already proved in `Rank.lean`.
+
+In this way, for a code `x : Code`, we can express properties such as:
+
+* “all rational cuts of `x` are local” (`codeIsCutLocal`),
+* “`x` has at least one dyadic bit of transcend rank” (`codeHasTranscendentBits`).
+
+In particular, in `LogicDissoc/Omega.lean` (§15), we are interested in codes `x` for which **all** cuts are of rank `ilm` and **all** dyadic bits are of rank `transcend`.
 
 ---
 
-### 15. Step 6 – Synthesis of the internal layer
+### 15. Ω-type codes (Omega.lean)
 
-Putting everything together:
+The definitions of `cutRank` and `bitRank` allow us to classify *every* code
+`x : Code` in terms of obstruction (local, `ilm`, transcend). To capture
+abstractly a Chaitin-Ω-type code, we do not add a global constant
+`Omega : Code` nor axioms in `Rank.lean`.
 
-1. A **concrete model** is built, with `delta` and proofs of its locality / non-locality behaviour.
-2. An abstract `RefSystem` bundles these properties, preserving the guarantee of existence.
-3. A **trichotomy** of `delta` is proved inside `RefSystem`.
-4. A finite type `ObstructionRank` is defined, recoding this trichotomy.
-5. Rank-based definitions are given for families of sentences (cuts, bits, …), relying only on these bricks.
+Instead, the file
+
+```text
+LogicDissoc/Omega.lean
+```
+
+introduces a parameterized specification:
+
+```lean
+namespace LogicDissoc.Omega
+
+structure Spec
+    {Model Sentence Code : Type _}
+    (E   : RefSystem Model Sentence)
+    (Cut : ℚ → Code → Sentence)
+    (Bit : ℕ → ℕ → Code → Sentence)
+    (x   : Code) : Prop :=
+  (cuts_are_ilm :
+     ∀ q : ℚ,
+       E.delta (Cut q x) ≠ 0 ∧ E.delta (Cut q x) = 1)
+  (bits_are_transcend :
+     ∀ n a : ℕ,
+       E.delta (Bit n a x) ≠ 0 ∧ E.delta (Bit n a x) ≠ 1)
+```
+
+In other words, `Spec E Cut Bit x` says that the code `x` is obstructionally
+of Ω-type:
+
+* all its rational cuts `Cut q x` are of rank `ilm`,
+* all its dyadic bits `Bit n a x` are of rank `transcend`,
+
+in the sense of `ObstructionRank` defined in `Rank.lean`.
+
+From this specification, `Omega.lean` proves that, for every `x` and every proof
+`hΩ : Spec E Cut Bit x`, we have:
+
+```lean
+open LogicDissoc.Omega
+
+lemma omega_cutRank_is_ilm
+    (hΩ : Spec E Cut Bit x)
+    [∀ q, Decidable (E.delta (Cut q x) = 0)]
+    [∀ q, Decidable (E.delta (Cut q x) = 1)] :
+  ∀ q : ℚ,
+    cutRank E Cut x q = ObstructionRank.ilm
+
+lemma omega_bitRank_is_transcend
+    (hΩ : Spec E Cut Bit x)
+    [∀ n a, Decidable (E.delta (Bit n a x) = 0)]
+    [∀ n a, Decidable (E.delta (Bit n a x) = 1)] :
+  ∀ n a : ℕ,
+    bitRank E Bit x n a = ObstructionRank.transcend
+```
+
+These lemmas only exploit the structure of `Spec` and the general lemmas in
+`Rank.lean` (`obstructionRank_ilm_of_delta_eq_one`,
+`obstructionRank_transcend_of_delta_ne`). They add no axiom: `Spec` is a purely
+propositional property of a code `x`, expressed in the language of `RefSystem`.
+
+The file `Rank.lean` thus remains purely general (it does not mention Ω);
+all the “Chaitin-type” logic is isolated in `Omega.lean`, at the level
+of `Prop`, without `noncomputable` or additional global constants.
+
+The future connection with **halting** (via `Rev.lean`) will consist, as a third
+step, in exhibiting concrete codes `x` satisfying `Spec E Cut Bit x`
+from a Chaitin-Ω-type construction. This step will be done in a separate file
+(for example `OmegaViaHalting.lean`), reusing the abstract halting theory
+developed in `Rev.lean`.
+
+---
+
+### 16. Step 6 – Synthesis of the internal layer
+
+In summary:
+
+1. A **concrete model** is built with `delta` and proofs of its behavior (locality / non-locality).
+2. These properties are encapsulated in an abstraction `RefSystem`, preserving the guarantee of existence.
+3. A **trichotomy** for `delta` is proved.
+4. A finite type `ObstructionRank` is defined to re-encode this trichotomy.
+5. Rank-based definitions are then introduced for families of sentences (cuts, bits, etc.), solely from these building blocks.
+6. Optionally, finer specifications such as `Omega.Spec` are isolated to describe Ω-type codes, without modifying `Rank.lean` or adding axioms.
 
 Conclusion:
 
-* The obstruction rank is **proved**, not assumed.
-* It is derived from `delta` inside `RefSystem`.
-* And `RefSystem` itself is justified by an **explicit construction** upstream.
+* the obstruction rank is **proved**, not postulated,
+* it is derived from `delta` inside `RefSystem`,
+* `RefSystem` itself is justified by an explicit **prior construction**,
+* Ω-type constructions are formulated as properties (`Spec`) on top of this layer, not as additional non-computable global constants.
 
 ---
 
-## 16. License
+## 17. License
 
-This project is licensed under the **GNU Affero General Public License version 3.0 only (AGPL-3.0-only)**.
+This project is distributed under the **GNU Affero General Public License version 3.0 only (AGPL-3.0-only)**.
 
-Any modified or derived version made accessible to third parties, including via online services, must be provided under the same license, with corresponding source code.
+Any modified or derived version made accessible to third parties, including via an online service, must be distributed under the same license, together with the corresponding source code.
 
-For details, see:
+For more details:
 [https://www.gnu.org/licenses/agpl-3.0.html](https://www.gnu.org/licenses/agpl-3.0.html)
