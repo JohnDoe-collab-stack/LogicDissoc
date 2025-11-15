@@ -17,3 +17,4 @@ import LogicDissoc.LocalRigidity
 import LogicDissoc.GraphToy
 import LogicDissoc.Rank
 import LogicDissoc.Omega
+import LogicDissoc.DynamicRank
